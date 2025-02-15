@@ -113,7 +113,7 @@ exports.resetPassword = async (req, res) => {
 };
 
 
-// Update Reset
+// Update Password
 exports.updatePassword = async (req, res) => {
     const { new_password } = req.body;
 
@@ -121,9 +121,9 @@ exports.updatePassword = async (req, res) => {
         return res.status(400).json({ error: 'Your new password is required.' });
     }
 
-    const { data, error } = await supabase.auth.updateUser({ password: new_password })
+    const { error } = await supabase.auth.updateUser({ password: new_password })
 
 
     if (error) return res.status(400).json({ error: error.message });
-    return res.status(200).json({ message: 'Password successfully reset.', data });
+    return res.status(200).json({ message: 'Password successfully reset.' });
 };
