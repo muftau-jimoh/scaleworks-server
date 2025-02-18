@@ -1,4 +1,5 @@
-const { callChatbot } = require("../services/stackAiService");
+const callChatbot = require("../services/chatbotService");
+
 
 exports.chatWithBot = async (req, res) => {
     try {

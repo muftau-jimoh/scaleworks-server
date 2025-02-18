@@ -1,4 +1,5 @@
-const { callLegalAssistant } = require("../services/stackAiService");
+const callLegalAssistant = require("../services/legalAssistantService");
+
 
 exports.performLegalResearch = async (req, res) => {
     try {
