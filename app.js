@@ -31,9 +31,9 @@ app.use('/api/user', userRoutes);
 
 app.use("/api/legal-research", legalResearchRoutes);
 app.use("/api/ediscovery", eDiscoveryRoutes);
-app.use("/api/contract-review", contractReviewRoutes);
 app.use("/api/transcription", transcriptionRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/contract-review", contractReviewRoutes);
 app.use("/api/document-automation", documentAutomationRoutes);
 
 // Health Check Route

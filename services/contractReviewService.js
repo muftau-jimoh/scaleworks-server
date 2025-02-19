@@ -2,9 +2,11 @@ require("dotenv").config();
 
 const STACK_AI_API_TOKEN = process.env.STACK_AI_API_TOKEN;
 const ORG_ID = process.env.STACK_AI_ORG_ID;
-const ALWAYS_ON_CHATBOT_FLOW_ID = process.env.STACK_AI_ALWAYS_ON_CHATBOT_FLOW_ID;
+const CONTRACT_REVIEW_FLOW_ID = process.env.STACK_AI_CONTRACT_REVIEW_FLOW_ID;
 
-const chatbotStreamingURL = `https://www.stack-inference.com/stream_exported_flow?flow_id=${ALWAYS_ON_CHATBOT_FLOW_ID}&org=${ORG_ID}`;
+
+
+const contractReviewStreamingURL = `https://www.stack-inference.com/stream_exported_flow?flow_id=${CONTRACT_REVIEW_FLOW_ID}&org=${ORG_ID}`
 
 /**
  * Streams data from Stack AI
@@ -56,15 +58,19 @@ async function callStackAI(apiUrl, data, onData) {
 }
 
 
-// 📌 Always-Available Chatbot (Streaming)
-async function callChatbotService(userId, query, onData) {
+
+
+// 📌 eDiscovery (Streaming)
+async function callContractReviewService(userId, documentUrls, onData) {
     const payload = {
         "user_id": `${userId}`,
-        "in-0": query,
+        "doc-0": documentUrls,
     };
-
-    return await callStackAI(chatbotStreamingURL, payload, onData);
+    
+    return await callStackAI(contractReviewStreamingURL, payload, onData);
 }
 
 
-module.exports = callChatbotService
+
+
+module.exports = callContractReviewService

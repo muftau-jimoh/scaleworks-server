@@ -1,14 +1,40 @@
-const callChatbot = require("../services/chatbotService");
+const callChatbotService = require("../services/chatbotService");
 
+async function chatWithBot(req, res) {
+  const userId = req.user?.id;
+  const { query } = req.body; // Get uploaded audio file
 
-exports.chatWithBot = async (req, res) => {
-    try {
-        const { message } = req.body;
-        if (!message) return res.status(400).json({ error: "Message is required" });
+  // Check if file is uploaded
+  if (!query) {
+    return res.status(400).json({ error: "A query is required." });
+  }
 
-        const response = await callChatbot("chatbot", { message });
-        res.json(response);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+  try {
+    // Set headers for SSE (Server-Sent Events)
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders(); // Ensure headers are sent immediately
+
+    await callChatbotService(userId, query, (data) => {
+      if (data["out-0"]) {
+        res.write(`data: ${data["out-0"]}\n\n`);
+      }
+    });
+
+    // End the response when transcription is done
+    res.end();
+  } catch (error) {
+    console.error("Error in fetching response to your query:", error);
+    // Send error response only once
+    if (!res.headersSent) {
+      res.status(500).json({
+        error:
+          error?.message ||
+          "An error occurred while fetching response to your query",
+      });
     }
+  }
 };
+
+module.exports = chatWithBot;
