@@ -21,8 +21,6 @@ exports.performEDiscovery = async (req, res) => {
             return res.status(500).json({ error: "File upload failed" });
         }
 
-        console.log('doc: ', documentUrls)
-
         // Set headers for streaming response
         res.setHeader("Content-Type", "text/event-stream");
         res.setHeader("Cache-Control", "no-cache");

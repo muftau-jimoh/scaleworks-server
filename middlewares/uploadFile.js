@@ -32,7 +32,7 @@ const validateFileUpload = (req, res, next) => {
     if (req.fileValidationError) {
         return res.status(400).json({ error: req.fileValidationError });
     }
-    
+
     next();
 };
 
