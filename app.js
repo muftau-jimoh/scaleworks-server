@@ -21,7 +21,7 @@ dotenv.config(); // Load environment variables
 
 
 // Middleware
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = ["https://scalesworks.vercel.app/"];
 
 app.use(
     cors({
