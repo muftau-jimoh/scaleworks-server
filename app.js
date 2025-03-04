@@ -21,13 +21,13 @@ dotenv.config(); // Load environment variables
 
 
 // Middleware
-const allowedOrigins = ["https://scalesworks.vercel.app/"];
+const allowedOrigins = ["https://scalesworks.vercel.app"];
 
 app.use(
     cors({
         origin: (origin, callback) => {
             if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, origin);
+                callback(null, true); // Use `true` instead of `origin`
             } else {
                 callback(new Error("Not allowed by CORS"));
             }
@@ -35,6 +35,7 @@ app.use(
         credentials: true,
     })
 );
+
 app.use(bodyParser.json());
 app.use(cookieParser());
 
