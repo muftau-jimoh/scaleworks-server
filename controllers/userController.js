@@ -1,5 +1,7 @@
 const supabase = require("../config/supabaseClient");
 
+require("dotenv").config();
+
 const { getUserByAuthId } = require("../utils/getUserByAuthId");
 
 
@@ -11,8 +13,23 @@ exports.signup = async (req, res) => {
         return res.status(400).json({ error: "Email, user name, and password are required." });
     }
 
-
     try {
+        // Check if email already exists
+        const { data: existingUser, error: fetchError } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("email", email)
+            .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") { 
+            // PGRST116: No rows found (safe to ignore)
+            return res.status(500).json({ error: "Error checking email existence. Try again later." });
+        }
+
+        if (existingUser) {
+            return res.status(400).json({ error: "Email already in use. Please log in or use a different email." });
+        }
+
         // Create Auth-User
         const { data, error } = await supabase.auth.signUp({ email, password });
 
@@ -21,7 +38,6 @@ exports.signup = async (req, res) => {
         }
 
         if (data?.user) {
-
             // Create user profile
             const { error: profileError } = await supabase.from("profiles").insert({
                 auth_id: data.user.id,
@@ -40,6 +56,7 @@ exports.signup = async (req, res) => {
         return res.status(500).json({ error: "Internal server error." });
     }
 };
+
 
 
 // User Login
@@ -106,24 +123,12 @@ exports.resetPassword = async (req, res) => {
         return res.status(400).json({ error: 'Email is required.' });
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.RESET_PASS_REDIRECT_URL}`,
+      })
+      
 
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ message: 'Password reset email sent.' });
 };
 
-
-// Update Password
-exports.updatePassword = async (req, res) => {
-    const { new_password } = req.body;
-
-    if (!new_password) {
-        return res.status(400).json({ error: 'Your new password is required.' });
-    }
-
-    const { error } = await supabase.auth.updateUser({ password: new_password })
-
-
-    if (error) return res.status(400).json({ error: error.message });
-    return res.status(200).json({ message: 'Password successfully reset.' });
-};

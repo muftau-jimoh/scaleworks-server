@@ -1,45 +1,41 @@
 const multer = require("multer");
 const path = require("path");
 
-// Set up storage engine (e.g., specifying destination and file naming)
+// Set up storage engine
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/audio/"); // Files will be stored in the 'uploads/audio' folder
+    cb(null, "uploads/audio/"); // Files will be stored in 'uploads/audio'
   },
   filename: (req, file, cb) => {
-    // Use original file name with a unique identifier
-    cb(null, Date.now() + path.extname(file.originalname)); // Filename with timestamp
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
   },
 });
 
-// File filter to accept only audio files
+// File filter to allow only specific audio formats
 const fileFilter = (req, file, cb) => {
-  const allowedFileTypes = /mp3|wav|ogg|flac|webm/; // Allowed audio file types
+  const allowedFileTypes = /mp3|wav|ogg|flac|webm/;
   const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
 
   if (extname) {
-    return cb(null, true); // Accept the file
+    cb(null, true); // Accept file
   } else {
-    // Reject the file and send an error message via the callback
-    return cb(new Error("Invalid file type. Allowed types are: mp3, wav, ogg, flac, webm"));
+    cb(new Error("Invalid file type. Allowed types: mp3, wav, ogg, flac, webm")); // Reject file
   }
 };
 
-// Middleware to ensure only one file is uploaded
+// Middleware to check if a file was uploaded
 const singleAudioFileUpload = (req, res, next) => {
-  // Check if no file is uploaded
   if (!req.file) {
-    return res.status(500).json({ error: "No audio file uploaded." });
+    return res.status(400).json({ error: "No audio file uploaded." });
   }
-
   next();
 };
 
-// Initialize Multer with storage, file filter, and limits
+// Initialize Multer with storage and file filter
 const uploadAudio = multer({
   storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 }, // File size limit (50MB)
-}).single("file"); // Expecting a single file upload
+  fileFilter: fileFilter, // ✅ Corrected from "audioFilter"
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+}).single("audio"); // Expecting a single file upload
 
 module.exports = { uploadAudio, singleAudioFileUpload };

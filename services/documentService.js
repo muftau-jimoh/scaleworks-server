@@ -53,9 +53,6 @@ exports.generateExcel = async (filePath, extractedData) => {
   try {
     await workbook.xlsx.readFile(filePath);
 
-    // List of sheets to update
-    const sheetNames = ["Page 1", "Page 2"];
-
     // Iterate over each sheet and update values
     for (const sheetName of Object.keys(extractedData)) {
       const sheet = workbook.getWorksheet(sheetName);

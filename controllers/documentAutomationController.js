@@ -2,9 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const {
-  trimExcelColumns,
-  cleanSheetStyles,
-  updateExcel,
   callDocumentAutomationService,
   generateExcel,
 } = require("../services/documentService"); // Function to fill the template
@@ -12,22 +9,22 @@ const { uploadToCloudinary } = require("../utils/fileUpload");
 
 const extractedData = {
   "Page 1": {
-    "Name": "Muftaudeen Jimoh",
+    Name: "Muftaudeen Jimoh",
     "Docket No.": "0123456",
     "GROSS MONTHLY RECEIPTS": "234,567.00",
     "Cost of goods sold": "345.00",
-    "Advertising": "345.00",
+    Advertising: "345.00",
     "Bad Debts": "345.00",
     "Motor Vehicles": "0.00",
-    "Gas": "0.00",
-    "Insurance": "345.00",
-    "Maintenance": "345.00",
-    "Registration": "345.00",
-    "Commissions": "345.00",
-    "Depletion": "0.00",
+    Gas: "0.00",
+    Insurance: "345.00",
+    Maintenance: "345.00",
+    Registration: "345.00",
+    Commissions: "345.00",
+    Depletion: "0.00",
     "Dues and Publications": "0.00",
     "Employee Benefit Programs": "0.00",
-    "Freight": "0.00",
+    Freight: "0.00",
     "Insurance one key": "life insurance",
     "Insurance one value": "350",
     "Insurance two key": "med insurance",
@@ -41,17 +38,17 @@ const extractedData = {
     "Rent on leased equipment": "0.00",
     "Machinery/Equipment": "0.00",
     "Other business property": "567,876",
-    "Repairs": "0.00",
-    "Supplies": "567,876",
-    "Taxes": "0.00",
-    "Travel": "567,876",
+    Repairs: "0.00",
+    Supplies: "567,876",
+    Taxes: "0.00",
+    Travel: "567,876",
     "Meals and entertainment": "0.00",
     "Utilities and phones": "567,876",
-    "Wages": "0.00",
+    Wages: "0.00",
     "Other expenses one key": "laundry",
     "Other expenses one value": "34",
     "Other expenses two key": "netflix & chill",
-    "Other expenses two value": "30"
+    "Other expenses two value": "30",
   },
   "Page 2": {
     "TOTAL MONTHLY EXPENSES": "123,567.00",
@@ -59,73 +56,73 @@ const extractedData = {
     "Seasonal Business": "Yes",
     "Monthly Income Percentage": [
       {
-        "Month": "January",
+        Month: "January",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "February",
+        Month: "February",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "March",
+        Month: "March",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "April",
+        Month: "April",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "May",
+        Month: "May",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "June",
+        Month: "June",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "July",
+        Month: "July",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "August",
+        Month: "August",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "September",
+        Month: "September",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "October",
+        Month: "October",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "November",
+        Month: "November",
         "Percentage Income": "20",
-        "expenses": "2,344"
+        expenses: "2,344",
       },
       {
-        "Month": "December",
+        Month: "December",
         "Percentage Income": "20",
-        "expenses": "2,344"
-      }
+        expenses: "2,344",
+      },
     ],
     "Business Accounts Basis": "CALENDAR",
     "Fiscal Year Start": "February 1, 2024",
     "Fiscal Year End": "January 31, 2025",
     "Gross Receipts Year to Date": "567,899.00",
-    "Gross Expenses Year to Date": "567,899.00"
-  }
-}
+    "Gross Expenses Year to Date": "567,899.00",
+  },
+};
 
 exports.automateDocument = async (req, res) => {
   try {
@@ -133,13 +130,11 @@ exports.automateDocument = async (req, res) => {
     const file = req.file; // Get uploaded file,
 
     if (!file) {
-      return res
-        .status(400)
-        .json({ error: "Document to be scanned is required" });
+      return res.status(400).json({ error: "Your PDF Form is required" });
     }
 
     // Upload file concurrently to Cloudinary
-    const folder = "scaleworks/documentAutomation";
+    const folder = `scaleworks/${userId}/documentAutomation/pdfs`;
     const documentUrl = await uploadToCloudinary(file, folder);
 
     if (!documentUrl) {
@@ -174,24 +169,22 @@ exports.automateDocument = async (req, res) => {
     const newFilePath = path.join(userFolder, newFileName);
     fs.copyFileSync(templatePath, newFilePath);
 
-
     // Generate an Excel file with extracted data
     const responseMessage = await generateExcel(newFilePath, extractedData);
 
-    if(responseMessage?.error) {
-        return res.status(500).json({ error: "Error generating Excel Sheet" });
+    if (responseMessage?.error) {
+      return res.status(500).json({ error: "Error generating Excel Sheet" });
     }
 
-      // Send the file to the client
-    res.sendFile(newFilePath, (err) => {
-        if (err) {
-          console.error("Error sending file:", err);
-          res.status(500).json({ error: "Error sending file" });
-        }
-        // delete the file after sending
-        fs.unlinkSync(newFilePath);
-      });
+    // Upload generated excel to Cloudinary
+    const excelFolder = `scaleworks/${userId}/documentAutomation/excels`;
+    const excelUrl = await uploadToCloudinary(
+      { path: newFilePath },
+      excelFolder
+    );
 
+    // Send the file to the client
+    res.status(200).json({ excelURL: excelUrl });
   } catch (error) {
     console.error("Error processing document:", error);
     res.status(500).json({ error: "Internal Server Error" });

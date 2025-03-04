@@ -8,27 +8,49 @@ const cloudinary = require("../config/cloudinary");
  * @param {string} folder - The folder to upload the file to.
  * @returns {Promise<string>} - The URL of the uploaded file.
  */
+
 const uploadToCloudinary = (file, folder) => {
     return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload(file.path, {
-            resource_type: 'raw',   // Handle raw files (like PDF, DOCX, etc.)
-            access_mode: 'public',  // Ensures the file is publicly accessible
-            folder: folder  // Specifies the folder to upload the file to
-        }, (error, result) => {
-            // Delete file after upload attempt
-            fs.unlink(file.path, (err) => {
-                if (err) console.error(`Error deleting file ${file.path}:`, err);
+        // Cloudinary Upload Options
+        const options = {
+            resource_type: "raw",  // Supports non-image files like PDFs, DOCX, XLSX
+            access_mode: "public",
+            folder: folder,
+        };
+
+        // If the file is stored on disk (has a path)
+        if (file.path) {
+            cloudinary.uploader.upload(file.path, options, (error, result) => {
+                // Delete local file after upload attempt
+                fs.unlink(file.path, (err) => {
+                    if (err) console.error(`Error deleting file ${file.path}:`, err);
+                });
+
+                if (error) {
+                    console.error("Cloudinary Upload Error:", error);
+                    reject(error);
+                } else {
+                    resolve(result.secure_url);
+                }
             });
 
-            if (error) {
-                // console.error("Cloudinary Upload Error:", error);
-                reject(error);
-            } else {
-                // console.log("File uploaded successfully:", result.secure_url);
-                resolve(result.secure_url); // Resolve with the public URL of the file
-            }
-        });
+        // If the file is an in-memory buffer (e.g., multer)
+        } else if (file.buffer) {
+            const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+                if (error) {
+                    console.error("Cloudinary Upload Error:", error);
+                    reject(error);
+                } else {
+                    resolve(result.secure_url);
+                }
+            });
+
+            streamifier.createReadStream(file.buffer).pipe(stream);
+        } else {
+            reject(new Error("Invalid file input: Must have either 'path' or 'buffer'"));
+        }
     });
 };
+
 
 module.exports = { uploadToCloudinary };
