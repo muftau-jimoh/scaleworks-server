@@ -19,23 +19,30 @@ const fileFilter = (req, file, cb) => {
   if (extname) {
     cb(null, true); // Accept file
   } else {
-    cb(new Error("Invalid file type. Allowed types: mp3, wav, ogg, flac, webm")); // Reject file
+    cb(new Error("Invalid file type. Allowed types: mp3, wav, ogg, flac, webm"), false); // Reject file
   }
-};
-
-// Middleware to check if a file was uploaded
-const singleAudioFileUpload = (req, res, next) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No audio file uploaded." });
-  }
-  next();
 };
 
 // Initialize Multer with storage and file filter
 const uploadAudio = multer({
   storage: storage,
-  fileFilter: fileFilter, // ✅ Corrected from "audioFilter"
+  fileFilter: fileFilter,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
-}).single("audio"); // Expecting a single file upload
+}).single("audio"); // ✅ Expecting a single file upload with key "audio"
+
+// Middleware to check if a file was uploaded
+const singleAudioFileUpload = (req, res, next) => {
+  uploadAudio(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: `Multer error: ${err.message}` });
+    } else if (err) {
+      console.log('err: ', err)
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    } else if (!req.file) {
+      return res.status(400).json({ error: "No audio file uploaded." });
+    }
+    next();
+  });
+};
 
 module.exports = { uploadAudio, singleAudioFileUpload };
