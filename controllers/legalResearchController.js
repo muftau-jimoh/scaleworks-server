@@ -1,4 +1,4 @@
-const callLegalAssistant = require("../services/legalAssistantService");
+const { callLegalAssistant, callGitHubLegalAssistant } = require("../services/legalAssistantService");
 
 exports.performLegalResearch = async (req, res) => {
   try {
@@ -23,16 +23,16 @@ exports.performLegalResearch = async (req, res) => {
 
     let streamClosed = false; // Track stream status
 
-    await callLegalAssistant(
-      userId,
+    await callGitHubLegalAssistant(
       query,
       (data) => {
         if (streamClosed) return; // Avoid writing after stream is closed
-        if (data["out-0"]) {
+        if (data) {
+          // console.log('data: ', data)
           res.write(
             `data: ${JSON.stringify({
               type: "SUCCESS",
-              message: data["out-0"],
+              message: data,
             })}\n\n`
           );
         }

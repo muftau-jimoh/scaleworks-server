@@ -1,109 +1,143 @@
 require("dotenv").config();
+const OpenAI = require("openai");
+const fetch = require("node-fetch");
 
-const STACK_AI_API_TOKEN = process.env.STACK_AI_API_TOKEN;
-const ORG_ID = process.env.STACK_AI_ORG_ID;
-const LEGAL_ASSIST_FLOW_ID = process.env.STACK_AI_LEGAL_ASSIST_FLOW_ID;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Make sure to set this in your .env file
 
-const legalAssistantStreamingURL = `https://www.stack-inference.com/stream_exported_flow?flow_id=${LEGAL_ASSIST_FLOW_ID}&org=${ORG_ID}`
+const openAIStreamingURL = "https://api.openai.com/v1/chat/completions";
 
 /**
- * Streams data from Stack AI
- * @param {string} apiUrl - Stack AI streaming API URL
+ * Streams response from OpenAI GPT-4o
+ * @param {string} apiUrl - OpenAI API URL
  * @param {object} data - Request payload
  * @param {function} onData - Callback for handling streamed data
- * @param {function} onError - Callback for handling error
+ * @param {function} onError - Callback for handling errors
  */
-
-async function callStackAI(apiUrl, data, onData, onError) {
+async function callOpenAI(apiUrl, data, onData, onError) {
     try {
         const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${STACK_AI_API_TOKEN}`,
+                "Authorization": `Bearer ${OPENAI_API_KEY}`,
                 "Accept": "text/event-stream",
             },
             body: JSON.stringify(data),
         });
 
         if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
+            throw new Error(`OpenAI API Error: ${response.statusText}`);
         }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
 
-        let buffer = ""; // Store incomplete JSON parts
+        let buffer = "";
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
 
-            buffer += chunk; // Append new data to buffer
-            const lines = buffer.split("\n"); // Split into lines
-            buffer = lines.pop(); // Save the last part (might be incomplete)
+            const lines = buffer.split("\n");
+            buffer = lines.pop(); // Keep the last incomplete line
 
             for (let line of lines) {
-
-                // **Ignore `[DONE]` message**
-                if (line.trim() === "data: [DONE]") {
-                    // console.log("Stream finished.");
-                    return; // Stop processing
-                }
+                if (line.trim() === "data: [DONE]") return;
 
                 if (line.startsWith("data: ")) {
                     try {
                         const jsonString = line.replace("data: ", "").trim();
-                        if (!jsonString) continue; // Skip empty lines
+                        if (!jsonString) continue;
 
                         const parsedData = JSON.parse(jsonString);
-                        onData(parsedData);
+                        if (parsedData.choices && parsedData.choices.length > 0) {
+                            onData(parsedData.choices[0].delta.content || ""); // Stream text as it arrives
+                        }
                     } catch (err) {
-                        // console.log('error line: ', line);
-                        // console.error("JSON Parse Error:", err);
-                        if (onError) onError("Invalid JSON response from server");
+                        if (onError) onError("Invalid JSON response from OpenAI");
                     }
                 }
             }
         }
 
-        // **Process any remaining buffer data (if it's a valid JSON)**
-        if (buffer.trim().startsWith("data: ") && buffer.trim() !== "data: [DONE]") {
-            try {
-                const jsonString = buffer.replace("data: ", "").trim();
-                if (jsonString) {
-                    const parsedData = JSON.parse(jsonString);
-                    onData(parsedData);
-                }
-            } catch (err) {
-                // console.log('error buffer: ', buffer);
-                // console.error("JSON Parse Error:", err);
-                if (onError) onError("Invalid JSON response from server");
-            }
-        }
-
     } catch (error) {
-        // console.error("Stack AI Streaming Error:", error);
         if (onError) onError(error.message);
     }
 }
 
-
-
-//  Legal Assistant (streaming)
-async function callLegalAssistant(userId, query, onData, onError) {
+/**
+ * Calls OpenAI GPT-4o for legal research
+ * @param {string} userId - User ID (optional, for tracking)
+ * @param {string} query - Legal question/query
+ * @param {function} onData - Callback for streaming OpenAI response
+ * @param {function} onError - Callback for handling errors
+ */
+async function callLegalAssistant(query, onData, onError) {
     try {
-        return await callStackAI(
-            legalAssistantStreamingURL,
-            { "user_id": `${userId}`, "in-0": query },
-            onData, 
+        return await callOpenAI(
+            openAIStreamingURL,
+            {
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: "You are a legal assistant providing detailed and well-researched legal information. Your responses should be accurate, well-structured, and, where applicable, cite relevant legal principles or case law." },
+                    { role: "user", content: query }
+                  ],
+                stream: true,
+            },
+            onData,
             onError
         );
     } catch (error) {
-        if (onError) onError(error); // Pass error to the handler
+        if (onError) onError(error);
     }
 }
 
-module.exports = callLegalAssistant;
+
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_ENDPOINT = "https://models.inference.ai.azure.com"; // GitHub's AI model inference endpoint
+const MODEL_NAME = "gpt-4o-mini"; // GitHub Marketplace model
+
+/**
+ * Calls GitHub AI Marketplace's GPT-4o Mini for legal research
+ * @param {string} query - Legal question/query
+ * @param {function} onData - Callback for streaming OpenAI response
+ * @param {function} onError - Callback for handling errors
+ */
+async function callGitHubLegalAssistant(query, onData, onError) {
+    try {
+        const client = new OpenAI({ baseURL: GITHUB_ENDPOINT, apiKey: GITHUB_TOKEN });
+
+        const stream = await client.chat.completions.create({
+            model: MODEL_NAME,
+            messages: [
+                { role: "system", content: "You are a legal assistant providing detailed and well-researched legal information. Your responses should be accurate, well-structured, and, where applicable, cite relevant legal principles or case law." },
+                { role: "user", content: query }
+            ],
+            stream: true,
+            stream_options: { include_usage: true } // Tracks token usage
+        });
+
+        let usage = null;
+        for await (const part of stream) {
+            onData(part.choices[0]?.delta?.content || ""); // Send streamed content
+            if (part.usage) {
+                usage = part.usage;
+            }
+        }
+
+        if (usage) {
+            console.log(`Prompt tokens: ${usage.prompt_tokens}`);
+            console.log(`Completion tokens: ${usage.completion_tokens}`);
+            console.log(`Total tokens: ${usage.total_tokens}`);
+        }
+
+    } catch (error) {
+        if (onError) onError(`GitHub AI API Error: ${error.message}`);
+    }
+}
+
+module.exports = { callLegalAssistant, callGitHubLegalAssistant };
