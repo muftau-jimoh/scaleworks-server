@@ -32,6 +32,11 @@ const callTranscriptionService = (filePath, onData, onError) => {
         readStream.on("data", (chunk) => {
           live.send(chunk);
         });
+
+        readStream.on("end", () => {
+          // console.log("✅ Finished reading file. Closing connection...");
+          live.requestClose(); // Close after reading
+        });
       });
 
       live.on(LiveTranscriptionEvents.Transcript, (data) => {
@@ -41,17 +46,27 @@ const callTranscriptionService = (filePath, onData, onError) => {
       });
 
       live.on(LiveTranscriptionEvents.Error, (error) => {
-        console.error("❌ Deepgram Error:", error);
+        // console.error("❌ Deepgram Error:", error);
         onError(error);
-        reject(error); // Reject promise on error
+        reject(error);
       });
 
       live.on(LiveTranscriptionEvents.Close, () => {
-        console.log("🔴 Connection closed.");
-        resolve(); // Resolve when transcription is fully processed
+        // console.log("🔴 Connection closed.");
+        
+        // Delete the file after successful transcription
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error(`⚠️ Failed to delete file: ${err}`);
+          } else {
+            console.log(`🗑️ Successfully deleted ${filePath}`);
+          }
+        });
+
+        resolve();
       });
 
-      // Timeout fallback to ensure connection doesn't stay open indefinitely
+      // Timeout fallback
       setTimeout(() => {
         // console.log("⌛ Timeout reached. Closing connection...");
         live.requestClose();

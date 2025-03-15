@@ -1,6 +1,10 @@
 const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
 const { callContractReviewService, callGithubModel } = require("../services/contractReviewService");
 
+const fs = require("fs");
+const util = require("util");
+const unlinkAsync = util.promisify(fs.unlink);
+
 exports.reviewContract = async (req, res) => {
   try {
     const files = req.files;
@@ -23,7 +27,7 @@ exports.reviewContract = async (req, res) => {
       contractTexts.join("\n\n"), // Combine multiple contracts into one text
       (data) => {
         if (streamClosed) return;
-        console.log('data: ', data)
+        console.log("data: ", data);
         if (data) {
           res.write(
             `data: ${JSON.stringify({ type: "SUCCESS", message: data })}\n\n`
@@ -43,10 +47,18 @@ exports.reviewContract = async (req, res) => {
 
     if (!streamClosed) {
       res.write(
-        `data: ${JSON.stringify({ type: "END", message: "Streaming complete" })}\n\n`
+        `data: ${JSON.stringify({
+          type: "END",
+          message: "Streaming complete",
+        })}\n\n`
       );
       setTimeout(() => res.end(), 500);
     }
+
+    // Delete files after processing
+    await Promise.all(files.map((file) => unlinkAsync(file.path)));
+    console.log("🗑️ All uploaded files deleted successfully.");
+
   } catch (error) {
     console.error("Streaming Error:", error);
     res.write(
