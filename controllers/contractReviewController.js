@@ -1,82 +1,56 @@
-const callContractReviewService = require("../services/contractReviewService");
-const { uploadToCloudinary } = require("../utils/fileUpload");
+const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
+const { callContractReviewService, callGithubModel } = require("../services/contractReviewService");
 
 exports.reviewContract = async (req, res) => {
   try {
-    const userId = req.user?.id;
-    const files = req.files; // Get uploaded files,
-    
+    const files = req.files;
     if (!files || files.length === 0) {
       return res.status(400).json({ error: "At least one file is required" });
     }
 
-    // Upload all files concurrently to Cloudinary
-    const folder = `scaleworks/${userId}/contractReview`;
-    const uploadPromises = files.map((file) =>
-      uploadToCloudinary(file, folder)
-    );
-    const documentUrls = await Promise.all(uploadPromises);
+    // Extract text from contracts
+    const contractTexts = await extractTextFromFiles(files);
 
-    if (!documentUrls || documentUrls.length === 0) {
-      return res.status(500).json({ error: "File upload failed" });
-    }
-
-
-    // Set headers for streaming response
+    // Streaming response setup
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-    res.flushHeaders(); // Send headers immediately
+    res.flushHeaders();
 
-    let streamClosed = false; // Track stream status
+    let streamClosed = false;
 
-    await callContractReviewService(
-      userId,
-      documentUrls,
+    await callGithubModel(
+      contractTexts.join("\n\n"), // Combine multiple contracts into one text
       (data) => {
-        if (streamClosed) return; // Avoid writing after stream is closed
-        if (data["out-0"]) {
-            res.write(
-                `data: ${JSON.stringify({
-                    type: "SUCCESS",
-                    message: data["out-0"],
-                })}\n\n`
-            );
+        if (streamClosed) return;
+        console.log('data: ', data)
+        if (data) {
+          res.write(
+            `data: ${JSON.stringify({ type: "SUCCESS", message: data })}\n\n`
+          );
         }
       },
       (error) => {
         console.error("Contract Review Error:", error);
-        if (streamClosed) return; // Avoid duplicate writes
+        if (streamClosed) return;
         res.write(
-          `event: error\ndata: ${JSON.stringify({
-            type: "ERROR",
-            message: error,
-          })}\n\n`
+          `data: ${JSON.stringify({ type: "ERROR", message: error })}\n\n`
         );
         res.end();
         streamClosed = true;
-        return; // Stop further execution
       }
     );
 
     if (!streamClosed) {
       res.write(
-        `data: ${JSON.stringify({
-          type: "END",
-          message: "Streaming complete",
-        })}\n\n`
+        `data: ${JSON.stringify({ type: "END", message: "Streaming complete" })}\n\n`
       );
-      setTimeout(() => {
-        res.end();
-      }, 500);
+      setTimeout(() => res.end(), 500);
     }
   } catch (error) {
     console.error("Streaming Error:", error);
     res.write(
-      `event: error\ndata: ${JSON.stringify({
-        type: "SERVER_ERROR",
-        message: error.message,
-      })}\n\n`
+      `data: ${JSON.stringify({ type: "SERVER_ERROR", message: error.message })}\n\n`
     );
     res.end();
   }

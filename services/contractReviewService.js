@@ -1,110 +1,188 @@
 require("dotenv").config();
+const OpenAI = require("openai");
 
-const STACK_AI_API_TOKEN = process.env.STACK_AI_API_TOKEN;
-const ORG_ID = process.env.STACK_AI_ORG_ID;
-const CONTRACT_REVIEW_FLOW_ID = process.env.STACK_AI_CONTRACT_REVIEW_FLOW_ID;
-
-const contractReviewStreamingURL = `https://www.stack-inference.com/stream_exported_flow?flow_id=${CONTRACT_REVIEW_FLOW_ID}&org=${ORG_ID}`;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const MAX_TOKENS = 7500; // Keep it under 8000 to be safe
 
 /**
- * Streams data from Stack AI
- * @param {string} apiUrl - Stack AI streaming API URL
- * @param {object} data - Request payload
+ * Streams contract analysis from OpenAI GPT-4o-mini
+ * @param {string} contractText - The contract text to analyze
  * @param {function} onData - Callback for handling streamed data
+ * @param {function} onError - Callback for handling errors
  */
-
-async function callStackAI(apiUrl, data, onData, onError) {
+async function callContractReviewService(contractText, onData, onError) {
   try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${STACK_AI_API_TOKEN}`,
-        Accept: "text/event-stream",
-      },
-      body: JSON.stringify(data),
-    });
+    const contractChunks = splitText(contractText, MAX_TOKENS);
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
+    for (const chunk of contractChunks) {
+      const payload = {
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert contract analyst. Review the following contract(s) and provide:
+              1. Key clauses and their meaning
+              2. Potential legal risks
+              3. Areas needing clarification`,
+          },
+          { role: "user", content: chunk },
+        ],
+        stream: true,
+      };
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
+      const response = await fetch(OPENAI_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          Accept: "text/event-stream",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    let buffer = ""; // Store incomplete JSON parts
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
 
-      const chunk = decoder.decode(value, { stream: true });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      buffer += chunk; // Append new data to buffer
-      const lines = buffer.split("\n"); // Split into lines
-      buffer = lines.pop(); // Save the last part (might be incomplete)
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
 
-      for (let line of lines) {
-        // **Ignore `[DONE]` message**
-        if (line.trim() === "data: [DONE]") {
-          // console.log("Stream finished.");
-          return; // Stop processing
-        }
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep the last line in case it's incomplete
 
-        if (line.startsWith("data: ")) {
-          try {
-            const jsonString = line.replace("data: ", "").trim();
-            if (!jsonString) continue; // Skip empty lines
+        for (let line of lines) {
+          if (line.trim() === "data: [DONE]") return; // End of stream
 
-            const parsedData = JSON.parse(jsonString);
-            onData(parsedData);
-          } catch (err) {
-            if (onError) onError("Invalid JSON response from server");
+          if (line.startsWith("data: ")) {
+            try {
+              const jsonString = line.replace("data: ", "").trim();
+              if (!jsonString) continue;
+
+              const parsedData = JSON.parse(jsonString);
+              const content = parsedData.choices?.[0]?.delta?.content;
+              if (content) onData(content);
+            } catch (err) {
+              if (onError) onError(`Invalid JSON: ${line}`);
+            }
           }
         }
       }
-    }
 
-    // **Process any remaining buffer data (if it's a valid JSON)**
-    if (
-      buffer.trim().startsWith("data: ") &&
-      buffer.trim() !== "data: [DONE]"
-    ) {
-      try {
-        const jsonString = buffer.replace("data: ", "").trim();
-        if (jsonString) {
+      // Process any remaining buffer data after stream ends
+      if (buffer.trim() && buffer.startsWith("data: ")) {
+        try {
+          const jsonString = buffer.replace("data: ", "").trim();
           const parsedData = JSON.parse(jsonString);
-          onData(parsedData);
+          const content = parsedData.choices?.[0]?.delta?.content;
+          if (content) onData(content);
+        } catch (err) {
+          if (onError) onError(`Final buffer JSON parse error: ${buffer}`);
         }
-      } catch (err) {
-        // console.log('error buffer: ', buffer);
-        // console.error("JSON Parse Error:", err);
-        if (onError) onError("Invalid JSON response from server");
       }
     }
   } catch (error) {
-    // console.error("Stack AI Streaming Error:", error);
-    if (onError) onError(error.message);
+    if (onError) onError(error.message || "Failed to process contract.");
   }
 }
 
-// 📌 eDiscovery (Streaming)
-async function callContractReviewService(
-  userId,
-  documentUrls,
-  onData,
-  onError
-) {
-  const payload = {
-    user_id: `${userId}`,
-    "doc-0": documentUrls,
-  };
 
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const endpoint = "https://models.inference.ai.azure.com";
+const modelName = "gpt-4o-mini";
+
+async function callGithubModel(contractText, onData, onError) {
   try {
-    return await callStackAI(contractReviewStreamingURL, payload, onData);
+    const client = new OpenAI({ baseURL: endpoint, apiKey: GITHUB_TOKEN });
+
+    const contractChunks = splitText(contractText, MAX_TOKENS);
+
+    for (const chunk of contractChunks) {
+      const stream = await client.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert contract analyst. Review the following contract(s) and provide:
+              1. Key clauses and their meaning
+              2. Potential legal risks
+              3. Areas needing clarification`,
+          },
+          { role: "user", content: chunk },
+        ],
+        model: modelName,
+        stream: true,
+        stream_options: { include_usage: true },
+      });
+
+      let buffer = "";
+      let usage = null;
+
+      for await (const part of stream) {
+        const content = part.choices?.[0]?.delta?.content;
+        if (content) {
+          buffer += content;
+
+          // Process only complete lines
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // Store any incomplete line
+
+          for (let line of lines) {
+            onData(line);
+          }
+        }
+
+        if (part.usage) {
+          usage = part.usage;
+        }
+      }
+
+      // Process remaining buffer
+      if (buffer.trim()) {
+        onData(buffer);
+      }
+
+      // Log token usage if available
+      // if (usage) {
+      //   console.log(`Prompt tokens: ${usage.prompt_tokens}`);
+      //   console.log(`Completion tokens: ${usage.completion_tokens}`);
+      //   console.log(`Total tokens: ${usage.total_tokens}`);
+      // }
+    }
   } catch (error) {
-    if (onError) onError(error); // Pass error to the handler
+    if (onError) onError(error.message || "Failed to process contract.");
   }
 }
 
-module.exports = callContractReviewService;
+
+// Utility function to split text into chunks
+function splitText(text, maxTokens) {
+  const words = text.split(" ");
+  const chunks = [];
+  let currentChunk = [];
+
+  for (let word of words) {
+    if (currentChunk.join(" ").length + word.length > maxTokens) {
+      chunks.push(currentChunk.join(" "));
+      currentChunk = [];
+    }
+    currentChunk.push(word);
+  }
+
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.join(" "));
+  }
+
+  return chunks;
+}
+
+
+module.exports = { callContractReviewService, callGithubModel };
