@@ -1,33 +1,126 @@
+const OpenAI = require("openai");
+
 require("dotenv").config();
+const fetch = require("node-fetch");
+const { Pinecone } = require("@pinecone-database/pinecone");
 
-const STACK_AI_API_TOKEN = process.env.STACK_AI_API_TOKEN;
-const ORG_ID = process.env.STACK_AI_ORG_ID;
-const ALWAYS_ON_CHATBOT_FLOW_ID = process.env.STACK_AI_ALWAYS_ON_CHATBOT_FLOW_ID;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
 
-const chatbotStreamingURL = `https://www.stack-inference.com/stream_exported_flow?flow_id=${ALWAYS_ON_CHATBOT_FLOW_ID}&org=${ORG_ID}`;
+const pinecone = new Pinecone({
+    apiKey: process.env.PINECONE_API_KEY,
+});
 
 /**
- * Streams data from Stack AI
- * @param {string} apiUrl - Stack AI streaming API URL
- * @param {object} data - Request payload
- * @param {function} onData - Callback for handling streamed data
+ * Perform vector search in Pinecone
+ * @param {string} query - User's question
+ * @returns {Promise<string>} - Relevant context from the knowledge base
  */
-async function callStackAI(apiUrl, data, onData) {
+async function fetchRelevantContext(query) {
     try {
-        const response = await fetch(apiUrl, {
+        const index = pinecone.index(PINECONE_INDEX_NAME);
+        const response = await index.query({
+            vector: await getEmbeddingGithub(query), // Convert query to vector
+            topK: 5, // Get top 5 most relevant results
+            includeMetadata: true, // Fetch document metadata
+        });
+
+        return response.matches
+            .map((match) => match.metadata.text)
+            .join("\n\n"); // Combine retrieved context
+    } catch (error) {
+        console.error("Pinecone Query Error:", error);
+        return ""; // Return empty context if error occurs
+    }
+}
+
+
+/**
+ * Convert text to embedding using OpenAI
+ * @param {string} text - Input text to convert
+ * @returns {Promise<number[]>} - Embedding vector
+ */
+async function getEmbedding(text) {
+    const response = await fetch("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+            input: text,
+            model: "text-embedding-3-small", // the embedding model
+        }),
+    });
+
+    const data = await response.json();
+    return data.data[0].embedding;
+}
+
+
+const githubToken = process.env.GITHUB_TOKEN;// GitHub Marketplace API Key
+const endpoint = "https://models.inference.ai.azure.com"; // GitHub's OpenAI Endpoint
+const modelName = "text-embedding-3-small"; // Embedding model
+
+const client = new OpenAI({ baseURL: endpoint, apiKey: githubToken });
+
+async function getEmbeddingGithub(text) {
+    if (!text || typeof text !== "string" || text.trim() === "") {
+        throw new TypeError("Invalid input: Text must be a non-empty string.");
+    }
+
+    try {
+        const response = await client.embeddings.create({
+            input: [`${text}`], // GitHub API requires an array of strings
+            model: modelName,
+        });
+
+        return response.data[0].embedding; // Extract the embedding vector
+    } catch (error) {
+        console.error("❌ Error fetching embedding:", error.message);
+        throw error;
+    }
+}
+
+
+/**
+ * Stream response from OpenAI GPT-4o-mini using retrieved context
+ * @param {string} query - User's question
+ * @param {function} onData - Callback to handle streamed data
+ */
+async function queryChatBotService(query, onData) {
+    try {
+        // Step 1: Fetch relevant context from Pinecone
+        const context = await fetchRelevantContext(query);
+        console.log('context; ', context)
+
+        return context
+
+        // Step 2: Send context + user query to OpenAI
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${STACK_AI_API_TOKEN}`,
-                "Accept": "text/event-stream",
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+                Accept: "text/event-stream",
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an AI assistant that answers questions based on provided knowledge base context.",
+                    },
+                    {
+                        role: "user",
+                        content: `Context:\n${context}\n\nUser Query: ${query}`,
+                    },
+                ],
+                stream: true, // Enable streaming
+            }),
         });
 
-        if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-        }
-
+        // Step 3: Stream response to client
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
 
@@ -42,7 +135,10 @@ async function callStackAI(apiUrl, data, onData) {
                 if (line.startsWith("data: ")) {
                     try {
                         const parsedData = JSON.parse(line.replace("data: ", ""));
-                        onData(parsedData);
+                        if (parsedData.choices && parsedData.choices.length > 0) {
+                            const text = parsedData.choices[0].delta?.content;
+                            if (text) onData(text);
+                        }
                     } catch (err) {
                         console.error("JSON Parse Error:", err);
                     }
@@ -50,21 +146,8 @@ async function callStackAI(apiUrl, data, onData) {
             });
         }
     } catch (error) {
-        console.error("Stack AI Streaming Error:", error);
-        throw error;
+        console.error("OpenAI Streaming Error:", error);
     }
 }
 
-
-// 📌 Always-Available Chatbot (Streaming)
-async function callChatbotService(userId, query, onData) {
-    const payload = {
-        "user_id": `${userId}`,
-        "in-0": query,
-    };
-
-    return await callStackAI(chatbotStreamingURL, payload, onData);
-}
-
-
-module.exports = callChatbotService
+module.exports = queryChatBotService;

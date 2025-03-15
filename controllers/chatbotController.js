@@ -1,4 +1,4 @@
-const callChatbotService = require("../services/chatbotService");
+const queryChatBotService = require("../services/chatbotService");
 
 async function chatWithBot(req, res) {
   const userId = req.user?.id;
@@ -16,9 +16,11 @@ async function chatWithBot(req, res) {
     res.setHeader("Connection", "keep-alive");
     res.flushHeaders(); // Ensure headers are sent immediately
 
-    await callChatbotService(userId, query, (data) => {
-      if (data["out-0"]) {
-        res.write(`data: ${data["out-0"]}\n\n`);
+    
+    await queryChatBotService(query, (streamedText) => {
+      if (streamedText) {
+        console.log('streamedText: ', streamedText)
+        res.write(`data: ${streamedText}\n\n`);
       }
     });
 
