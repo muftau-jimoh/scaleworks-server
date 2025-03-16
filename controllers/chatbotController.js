@@ -16,27 +16,54 @@ async function chatWithBot(req, res) {
     res.setHeader("Connection", "keep-alive");
     res.flushHeaders(); // Ensure headers are sent immediately
 
-    
-    await queryChatBotService(query, (streamedText) => {
-      if (streamedText) {
-        console.log('streamedText: ', streamedText)
-        res.write(`data: ${streamedText}\n\n`);
-      }
-    });
+    let streamClosed = false; // Track stream status
 
-    // End the response when transcription is done
-    res.end();
-  } catch (error) {
-    console.error("Error in fetching response to your query:", error);
-    // Send error response only once
-    if (!res.headersSent) {
-      res.status(500).json({
-        error:
-          error?.message ||
-          "An error occurred while fetching response to your query",
-      });
+    await queryChatBotService(
+      query,
+      (data) => {
+        if (!streamClosed && data) {
+          console.log('data: ', data)
+          res.write(
+            `data: ${JSON.stringify({ type: "SUCCESS", message: data })}\n\n`
+          );
+        }
+      },
+      (error) => {
+        console.error("ChatBot Error:", error);
+        if (!streamClosed) {
+          res.write(
+            `event: error\ndata: ${JSON.stringify({
+              type: "ERROR",
+              message: error,
+            })}\n\n`
+          );
+          res.end();
+          streamClosed = true;
+        }
+      }
+    );
+
+    if (!streamClosed) {
+      res.write(
+        `data: ${JSON.stringify({
+          type: "END",
+          message: "Streaming complete",
+        })}\n\n`
+      );
+      setTimeout(() => {
+        res.end();
+      }, 500);
     }
+  } catch (error) {
+    console.error("Streaming Error:", error);
+    res.write(
+      `event: error\ndata: ${JSON.stringify({
+        type: "SERVER_ERROR",
+        message: error.message,
+      })}\n\n`
+    );
+    res.end();
   }
-};
+}
 
 module.exports = chatWithBot;

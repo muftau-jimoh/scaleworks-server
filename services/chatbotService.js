@@ -1,86 +1,102 @@
-const OpenAI = require("openai");
-
 require("dotenv").config();
 const fetch = require("node-fetch");
-const { Pinecone } = require("@pinecone-database/pinecone");
+const { fetchRelevantContext } = require("../utils/chatBotModelFunctions");
+const OpenAI = require("openai");
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const PINECONE_INDEX_NAME_1 = process.env.PINECONE_INDEX_NAME_1;
-
-const pinecone = new Pinecone({
-    apiKey: process.env.PINECONE_API_KEY,
-});
 
 /**
- * Perform vector search in Pinecone
+ * Streams data from OpenAI
+ * @param {string} relevantChunks - Relevant Document Content
  * @param {string} query - User's question
- * @returns {Promise<string>} - Relevant context from the knowledge base
+ * @param {function} onData - Callback for handling streamed data
+ * @param {function} onError - Callback for handling errors
+ * @returns {Promise<void>} Resolves when streaming is fully complete
  */
-async function fetchRelevantContext(query) {
+
+async function askAI(relevantContext, query, onData, onError) {
+  const context = relevantContext.join("\n\n");
+
+  return new Promise(async (resolve, reject) => {
+    // ✅ Ensure streaming completes before resolving
     try {
-        const index = pinecone.index(PINECONE_INDEX_NAME_1);
-        const response = await index.query({
-            vector: await getEmbeddingGithub(query), // Convert query to vector
-            topK: 5, // Get top 5 most relevant results
-            includeMetadata: true, // Fetch document metadata
-        });
-
-        return response.matches
-            .map((match) => match.metadata.text)
-            .join("\n\n"); // Combine retrieved context
-    } catch (error) {
-        console.error("Pinecone Query Error:", error);
-        return ""; // Return empty context if error occurs
-    }
-}
-
-
-/**
- * Convert text to embedding using OpenAI
- * @param {string} text - Input text to convert
- * @returns {Promise<number[]>} - Embedding vector
- */
-async function getEmbeddingOpenAI(text) {
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-        method: "POST",
-        headers: {
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-            input: text,
-            model: "text-embedding-3-small", // the embedding model
-        }),
-    });
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are an AI assistant that answers questions based on provided knowledge base context.",
+              },
+              {
+                role: "user",
+                content: `Context:\n${context}\n\nUser Query: ${query}`,
+              },
+            ],
+            stream: true, // Enable streaming
+          }),
+        }
+      );
 
-    const data = await response.json();
-    return data.data[0].embedding;
-}
+      if (!response.ok) {
+        throw new Error(`OpenAI API Error: ${response.statusText}`);
+      }
 
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
 
-const githubToken = process.env.GITHUB_TOKEN;// GitHub Marketplace API Key
-const endpoint = "https://models.inference.ai.azure.com"; // GitHub's OpenAI Endpoint
-const modelName = "text-embedding-3-small"; // Embedding model
+      let buffer = "";
 
-const client = new OpenAI({ baseURL: endpoint, apiKey: githubToken });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-async function getEmbeddingGithub(text) {
-    if (!text || typeof text !== "string" || text.trim() === "") {
-        throw new TypeError("Invalid input: Text must be a non-empty string.");
-    }
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
 
-    try {
-        const response = await client.embeddings.create({
-            input: [`${text}`], // GitHub API requires an array of strings
-            model: modelName,
-        });
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // Keep the last incomplete line
 
-        return response.data[0].embedding; // Extract the embedding vector
+        for (let line of lines) {
+          if (line.trim() === "data: [DONE]") {
+            resolve(); // ✅ Ensure function resolves when streaming ends
+            return;
+          }
+
+          if (line.startsWith("data: ")) {
+            try {
+              const jsonString = line.replace("data: ", "").trim();
+              if (!jsonString) continue;
+
+              const parsedData = JSON.parse(jsonString);
+              if (parsedData.choices && parsedData.choices.length > 0) {
+                onData(parsedData.choices[0].delta.content || ""); // Stream text as it arrives
+              }
+            } catch (err) {
+              onError("Invalid JSON response from OpenAI");
+            }
+          }
+        }
+      }
+
+      resolve(); // ✅ Ensure Promise resolves on completion
     } catch (error) {
-        console.error("❌ Error fetching embedding:", error.message);
-        throw error;
+      onError(error.message);
+      reject(error); // ✅ Proper error handling
     }
+  });
 }
+
+
 
 
 /**
@@ -88,66 +104,86 @@ async function getEmbeddingGithub(text) {
  * @param {string} query - User's question
  * @param {function} onData - Callback to handle streamed data
  */
-async function queryChatBotService(query, onData) {
-    try {
-        // Step 1: Fetch relevant context from Pinecone
-        const context = await fetchRelevantContext(query);
-        console.log('context; ', context)
-
-        return context
-
-        // Step 2: Send context + user query to OpenAI
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${OPENAI_API_KEY}`,
-                Accept: "text/event-stream",
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are an AI assistant that answers questions based on provided knowledge base context.",
-                    },
-                    {
-                        role: "user",
-                        content: `Context:\n${context}\n\nUser Query: ${query}`,
-                    },
-                ],
-                stream: true, // Enable streaming
-            }),
-        });
-
-        // Step 3: Stream response to client
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-
-            // Process each data chunk
-            chunk.split("\n").forEach((line) => {
-                if (line.startsWith("data: ")) {
-                    try {
-                        const parsedData = JSON.parse(line.replace("data: ", ""));
-                        if (parsedData.choices && parsedData.choices.length > 0) {
-                            const text = parsedData.choices[0].delta?.content;
-                            if (text) onData(text);
-                        }
-                    } catch (err) {
-                        console.error("JSON Parse Error:", err);
-                    }
-                }
-            });
-        }
-    } catch (error) {
-        console.error("OpenAI Streaming Error:", error);
+async function queryChatBotService(query, onData, onError) {
+  try {
+    if (!query) {
+      onError("Query is required.");
+      return;
     }
+
+    // Step 1: Fetch relevant context from Pinecone
+    const relevantContext = await fetchRelevantContext(query);
+
+    await askAIFromGitHub(relevantContext, query, onData, onError);
+  } catch (error) {
+    console.error("OpenAI Streaming Error:", error);
+    onError(error);
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Streams data from GitHub Marketplace AI
+ * @param {string[]} relevantContext - Relevant Document Content
+ * @param {string} query - User's question
+ * @param {function} onData - Callback for handling streamed data
+ * @param {function} onError - Callback for handling errors
+ * @returns {Promise<void>} Resolves when streaming is fully complete
+ */
+
+async function askAIFromGitHub(relevantContext, query, onData, onError) {
+    const context = relevantContext.join("\n\n");
+
+    const client = new OpenAI({ 
+        baseURL: "https://models.inference.ai.azure.com", 
+        apiKey: process.env.GITHUB_TOKEN 
+    });
+
+    return new Promise(async (resolve, reject) => {  // ✅ Ensures streaming fully completes
+        try {
+            const stream = await client.chat.completions.create({
+                messages: [
+                    { role: "system", content: "You are an AI assistant that answers questions based on provided knowledge base context." },
+                    { role: "user", content: `Context:\n${context}\n\nUser Query: ${query}` }
+                ],
+                model: "gpt-4o",
+                stream: true,
+                stream_options: { include_usage: true }
+            });
+
+            let usage = null;
+
+            for await (const part of stream) {
+                const text = part.choices[0]?.delta?.content || "";
+                if (text) onData(text);  // ✅ Stream text as it arrives
+
+                if (part.usage) usage = part.usage;
+            }
+
+            if (usage) {
+                // console.log(`Prompt tokens: ${usage.prompt_tokens}`);
+                // console.log(`Completion tokens: ${usage.completion_tokens}`);
+                // console.log(`Total tokens: ${usage.total_tokens}`);
+            }
+
+            resolve();  // ✅ Ensures function completes successfully
+
+        } catch (error) {
+            onError(error.message);
+            reject(error);  // ✅ Proper error handling
+        }
+    });
+}
+
+
 
 module.exports = queryChatBotService;

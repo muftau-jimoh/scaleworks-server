@@ -10,7 +10,7 @@ require("dotenv").config();
  * @param {function} onData - Callback for handling streamed data
  * @param {function} onError - Callback for handling errors
  * @returns {Promise<void>} Resolves when streaming is fully complete
- */
+ */ 
 
 async function askAI(relevantChunks, query, onData, onError) {
     const context = relevantChunks.join("\n\n");
@@ -102,12 +102,6 @@ async function callEDiscovery(sessionId, query, vectorIds, onData, onError) {
     await askAIFromGitHub(relevantChunks, query, onData, onError);  // ✅ Now ensures completion before cleanup
     await deleteVectors(vectorIds);  // ✅ Runs only after streaming fully ends
 }
-
-
-
-
-
-
 
 
 

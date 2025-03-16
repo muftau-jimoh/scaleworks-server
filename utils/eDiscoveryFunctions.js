@@ -9,7 +9,7 @@ const pineconeIndexNameTwo = process.env.PINECONE_INDEX_NAME_2;
 const pc = new Pinecone({ apiKey: pineconeApiKey });
 const index = pc.index(pineconeIndexNameTwo);
 
-/**
+/** 
  * Finds relevant chunks for the given question
  */
 async function findRelevantChunks(sessionId, query) {
