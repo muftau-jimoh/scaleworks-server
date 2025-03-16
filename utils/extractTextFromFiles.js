@@ -58,11 +58,23 @@ async function extractTextFromFile(file) {
   throw new Error(`Unsupported file type: ${ext}`);
 }
 
+
 /**
  * Extracts text from multiple files and returns as an array.
  */
 async function extractTextFromFiles(files) {
-  return Promise.all(files.map((file) => extractTextFromFile(file)));
+  return Promise.all(
+    files.map(async (file) => {
+      try {
+        const text = await extractTextFromFile(file);
+        return { status: "success", text };
+      } catch (error) {
+        console.error(`Error extracting text from ${file.originalname}:`, error.message);
+        return { status: "failed", error: `Error extracting text from ${file.originalname}: ${error.message}` };
+      }
+    })
+  );
 }
+
 
 module.exports = { extractTextFromFiles };

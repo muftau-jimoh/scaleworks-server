@@ -3,14 +3,14 @@ require("dotenv").config();
 const { Pinecone } = require("@pinecone-database/pinecone");
 const extractTextFromPDFs = require("./extractText");
 const chunkText = require("./chunkText");
-const { getEmbeddingFromGithub } = require("./getEmbedding");
+const { getEmbeddingFromGithub } = require("../../utils/getEmbedding");
 
 const pineconeApiKey = process.env.PINECONE_API_KEY;
-const pineconeIndexName = process.env.PINECONE_INDEX_NAME;
+const pineconeIndexNameOne = process.env.PINECONE_INDEX_NAME_1;
 
 // Initialize Pinecone
 const pc = new Pinecone({ apiKey: pineconeApiKey });
-const index = pc.index(pineconeIndexName);
+const index = pc.index(pineconeIndexNameOne);
 
 async function uploadDocuments(folderPath) {
     console.log("📂 Extracting text from PDFs in:", folderPath);

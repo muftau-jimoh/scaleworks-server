@@ -1,116 +1,174 @@
+const { findRelevantChunks, deleteVectors } = require("../utils/eDiscoveryFunctions");
+
+const OpenAI = require("openai");
 require("dotenv").config();
 
-const STACK_AI_API_TOKEN = process.env.STACK_AI_API_TOKEN;
-const ORG_ID = process.env.STACK_AI_ORG_ID;
-const E_DISCOVERY_FLOW_ID = process.env.STACK_AI_E_DISCOVERY_FLOW_ID;
-
-
-
-const eDiscoveryStreamingURL = `https://www.stack-inference.com/stream_exported_flow?flow_id=${E_DISCOVERY_FLOW_ID}&org=${ORG_ID}`
-
 /**
- * Streams data from Stack AI
- * @param {string} apiUrl - Stack AI streaming API URL
- * @param {object} data - Request payload
+ * Streams data from OpenAI
+ * @param {string} relevantChunks - Relevant Document Content
+ * @param {string} query - User's question
  * @param {function} onData - Callback for handling streamed data
+ * @param {function} onError - Callback for handling errors
+ * @returns {Promise<void>} Resolves when streaming is fully complete
  */
 
-async function callStackAI(apiUrl, data, onData, onError) {
-    try {
-        const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${STACK_AI_API_TOKEN}`,
-                "Accept": "text/event-stream",
-            },
-            body: JSON.stringify(data),
-        });
+async function askAI(relevantChunks, query, onData, onError) {
+    const context = relevantChunks.join("\n\n");
 
-        if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-        }
+    return new Promise(async (resolve, reject) => {  // ✅ Ensure streaming completes before resolving
+        try {
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+                    "Accept": "text/event-stream",
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o",
+                    messages: [
+                        { role: "system", content: "You are a document analyst. Answer the user's question using only the provided document content." },
+                        { role: "user", content: `Relevant Document Content:\n${context}` },
+                        { role: "user", content: `Question: ${query}` },
+                    ],
+                    stream: true,
+                }),
+            });
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
+            if (!response.ok) {
+                throw new Error(`OpenAI API Error: ${response.statusText}`);
+            }
 
-        let buffer = ""; // Store incomplete JSON parts
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+            let buffer = "";
 
-            const chunk = decoder.decode(value, { stream: true });
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            buffer += chunk; // Append new data to buffer
-            const lines = buffer.split("\n"); // Split into lines
-            buffer = lines.pop(); // Save the last part (might be incomplete)
+                const chunk = decoder.decode(value, { stream: true });
+                buffer += chunk;
 
-            for (let line of lines) {
+                const lines = buffer.split("\n");
+                buffer = lines.pop(); // Keep the last incomplete line
 
-                // **Ignore `[DONE]` message**
-                if (line.trim() === "data: [DONE]") {
-                    console.log("Stream finished.");
-                    return; // Stop processing
-                }
+                for (let line of lines) {
+                    if (line.trim() === "data: [DONE]") {
+                        resolve(); // ✅ Ensure function resolves when streaming ends
+                        return;
+                    }
 
-                if (line.startsWith("data: ")) {
-                    try {
-                        const jsonString = line.replace("data: ", "").trim();
-                        if (!jsonString) continue; // Skip empty lines
+                    if (line.startsWith("data: ")) {
+                        try {
+                            const jsonString = line.replace("data: ", "").trim();
+                            if (!jsonString) continue;
 
-                        const parsedData = JSON.parse(jsonString);
-                        onData(parsedData);
-                    } catch (err) {
-                        // console.log('error line: ', line);
-                        // console.error("JSON Parse Error:", err);
-                        if (onError) onError("Invalid JSON response from server");
+                            const parsedData = JSON.parse(jsonString);
+                            if (parsedData.choices && parsedData.choices.length > 0) {
+                                onData(parsedData.choices[0].delta.content || ""); // Stream text as it arrives
+                            }
+                        } catch (err) {
+                            onError("Invalid JSON response from OpenAI");
+                        }
                     }
                 }
             }
-        }
 
-        // **Process any remaining buffer data (if it's a valid JSON)**
-        if (buffer.trim().startsWith("data: ") && buffer.trim() !== "data: [DONE]") {
-            try {
-                const jsonString = buffer.replace("data: ", "").trim();
-                if (jsonString) {
-                    const parsedData = JSON.parse(jsonString);
-                    onData(parsedData);
-                }
-            } catch (err) {
-                console.log('error buffer: ', buffer);
-                console.error("JSON Parse Error:", err);
-                if (onError) onError("Invalid JSON response from server");
-            }
-        }
+            resolve(); // ✅ Ensure Promise resolves on completion
 
-    } catch (error) {
-        console.error("Stack AI Streaming Error:", error);
-        if (onError) onError(error.message);
-    }
+        } catch (error) {
+            onError(error.message);
+            reject(error); // ✅ Proper error handling
+        }
+    });
 }
 
 
 // 📌 eDiscovery (Streaming)
-async function callEDiscovery(userId, documentUrls, query, onData, onError) {
-    const payload = {
-        "user_id": `${userId}`,
-        "doc-0": documentUrls,
-        "in-0": query,
-    };
-
-    try {
-        return await callStackAI(
-            eDiscoveryStreamingURL,
-            payload,
-            onData, 
-            onError
-        );
-    } catch (error) {
-        if (onError) onError(error); // Pass error to the handler
+async function callEDiscovery(sessionId, query, vectorIds, onData, onError) {
+    if (!sessionId || !query) {
+        onError("Session ID and query are required.");
+        return;
     }
+
+    const relevantChunks = await findRelevantChunks(sessionId, query);
+    if (relevantChunks.length === 0) {
+        onError("No relevant content found.");
+        return;
+    }
+
+    await askAIFromGitHub(relevantChunks, query, onData, onError);  // ✅ Now ensures completion before cleanup
+    await deleteVectors(vectorIds);  // ✅ Runs only after streaming fully ends
 }
 
 
-module.exports = callEDiscovery
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Streams data from GitHub Marketplace AI
+ * @param {string[]} relevantChunks - Relevant Document Content
+ * @param {string} query - User's question
+ * @param {function} onData - Callback for handling streamed data
+ * @param {function} onError - Callback for handling errors
+ * @returns {Promise<void>} Resolves when streaming is fully complete
+ */
+
+async function askAIFromGitHub(relevantChunks, query, onData, onError) {
+    const context = relevantChunks.join("\n\n");
+
+    const client = new OpenAI({ 
+        baseURL: "https://models.inference.ai.azure.com", 
+        apiKey: process.env.GITHUB_TOKEN 
+    });
+
+    return new Promise(async (resolve, reject) => {  // ✅ Ensures streaming fully completes
+        try {
+            const stream = await client.chat.completions.create({
+                messages: [
+                    { role: "system", content: "You are a document analyst. Answer the user's question using only the provided document content." },
+                    { role: "user", content: `Relevant Document Content:\n${context}` },
+                    { role: "user", content: `Question: ${query}` },
+                ],
+                model: "gpt-4o",
+                stream: true,
+                stream_options: { include_usage: true }
+            });
+
+            let usage = null;
+
+            for await (const part of stream) {
+                const text = part.choices[0]?.delta?.content || "";
+                if (text) onData(text);  // ✅ Stream text as it arrives
+
+                if (part.usage) usage = part.usage;
+            }
+
+            if (usage) {
+                // console.log(`Prompt tokens: ${usage.prompt_tokens}`);
+                // console.log(`Completion tokens: ${usage.completion_tokens}`);
+                // console.log(`Total tokens: ${usage.total_tokens}`);
+            }
+
+            resolve();  // ✅ Ensures function completes successfully
+
+        } catch (error) {
+            onError(error.message);
+            reject(error);  // ✅ Proper error handling
+        }
+    });
+}
+
+
+module.exports = callEDiscovery;

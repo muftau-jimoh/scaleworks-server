@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const { Pinecone } = require("@pinecone-database/pinecone");
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
+const PINECONE_INDEX_NAME_1 = process.env.PINECONE_INDEX_NAME_1;
 
 const pinecone = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY,
@@ -18,7 +18,7 @@ const pinecone = new Pinecone({
  */
 async function fetchRelevantContext(query) {
     try {
-        const index = pinecone.index(PINECONE_INDEX_NAME);
+        const index = pinecone.index(PINECONE_INDEX_NAME_1);
         const response = await index.query({
             vector: await getEmbeddingGithub(query), // Convert query to vector
             topK: 5, // Get top 5 most relevant results
@@ -40,7 +40,7 @@ async function fetchRelevantContext(query) {
  * @param {string} text - Input text to convert
  * @returns {Promise<number[]>} - Embedding vector
  */
-async function getEmbedding(text) {
+async function getEmbeddingOpenAI(text) {
     const response = await fetch("https://api.openai.com/v1/embeddings", {
         method: "POST",
         headers: {

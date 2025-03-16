@@ -1,19 +1,36 @@
 const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
-const { callContractReviewService, callGithubModel } = require("../services/contractReviewService");
+const {
+  callContractReviewService,
+  callGithubModel,
+} = require("../services/contractReviewService");
 
 const fs = require("fs");
 const util = require("util");
 const unlinkAsync = util.promisify(fs.unlink);
 
 exports.reviewContract = async (req, res) => {
+  let files = []; // Declare outside try block
+
   try {
-    const files = req.files;
+    files = req.files; // Assign inside try
     if (!files || files.length === 0) {
       return res.status(400).json({ error: "At least one file is required" });
     }
 
     // Extract text from contracts
-    const contractTexts = await extractTextFromFiles(files);
+    const extractionResults = await extractTextFromFiles(files);
+
+    // Check if any extraction failed
+    const failedExtractions = extractionResults.filter(
+      (result) => result.status === "failed"
+    );
+    const successfulTexts = extractionResults
+      .filter((result) => result.status === "success")
+      .map((result) => result.text);
+
+    if (failedExtractions.length > 0) {
+      console.error("Some files failed to extract:", failedExtractions);
+    }
 
     // Streaming response setup
     res.setHeader("Content-Type", "text/event-stream");
@@ -23,27 +40,38 @@ exports.reviewContract = async (req, res) => {
 
     let streamClosed = false;
 
-    await callGithubModel(
-      contractTexts.join("\n\n"), // Combine multiple contracts into one text
-      (data) => {
-        if (streamClosed) return;
-        console.log("data: ", data);
-        if (data) {
+    // If at least one file succeeded, process it
+    if (successfulTexts.length > 0) {
+      await callGithubModel(
+        successfulTexts.join("\n\n"), // Combine extracted texts
+        (data) => {
+          if (streamClosed) return;
           res.write(
             `data: ${JSON.stringify({ type: "SUCCESS", message: data })}\n\n`
           );
+        },
+        (error) => {
+          console.error("Contract Review Error:", error);
+          if (streamClosed) return;
+          res.write(
+            `data: ${JSON.stringify({ type: "ERROR", message: error })}\n\n`
+          );
+          res.end();
+          streamClosed = true;
         }
-      },
-      (error) => {
-        console.error("Contract Review Error:", error);
-        if (streamClosed) return;
-        res.write(
-          `data: ${JSON.stringify({ type: "ERROR", message: error })}\n\n`
-        );
-        res.end();
-        streamClosed = true;
-      }
-    );
+      );
+    }
+
+    // Inform about failed extractions
+    if (failedExtractions.length > 0) {
+      res.write(
+        `data: ${JSON.stringify({
+          type: "WARNING",
+          message: "Some files failed to extract",
+          details: failedExtractions,
+        })}\n\n`
+      );
+    }
 
     if (!streamClosed) {
       res.write(
@@ -54,16 +82,20 @@ exports.reviewContract = async (req, res) => {
       );
       setTimeout(() => res.end(), 500);
     }
-
-    // Delete files after processing
-    await Promise.all(files.map((file) => unlinkAsync(file.path)));
-    console.log("🗑️ All uploaded files deleted successfully.");
-
   } catch (error) {
     console.error("Streaming Error:", error);
     res.write(
-      `data: ${JSON.stringify({ type: "SERVER_ERROR", message: error.message })}\n\n`
+      `data: ${JSON.stringify({
+        type: "SERVER_ERROR",
+        message: error.message,
+      })}\n\n`
     );
     res.end();
+  } finally {
+    if (files.length > 0) {
+      await Promise.all(files.map((file) => unlinkAsync(file.path)));
+      console.log("🗑️ All uploaded files deleted successfully.");
+    }
   }
 };
+
