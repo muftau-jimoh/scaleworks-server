@@ -13,6 +13,7 @@ const documentAutomationRoutes = require("./routes/documentAutomationRoutes.js")
 
 
 const cookieParser = require('cookie-parser');
+const { trainNlpModel } = require('./services/nlpCaseSummary.js');
 
 const app = express();
 
@@ -49,6 +50,9 @@ app.use("/api/transcription", transcriptionRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/contract-review", contractReviewRoutes);
 app.use("/api/document-automation", documentAutomationRoutes);
+
+
+// trainNlpModel();
 
 // Health Check Route
 app.get('/', (req, res) => {

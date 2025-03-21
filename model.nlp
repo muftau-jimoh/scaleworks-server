@@ -1,0 +1,2086 @@
+{
+  "settings": {
+    "languages": [
+      "en"
+    ],
+    "tag": "nlp",
+    "threshold": 0.5,
+    "autoLoad": true,
+    "autoSave": true,
+    "modelFileName": "model.nlp",
+    "executeActionsBeforeAnswers": false,
+    "calculateSentiment": true
+  },
+  "nluManager": {
+    "settings": {
+      "tag": "nlu-manager"
+    },
+    "locales": [
+      "en"
+    ],
+    "languageNames": {},
+    "domainManagers": {
+      "en": {
+        "settings": {
+          "locale": "en",
+          "trainByDomain": false,
+          "tag": "domain-manager-en",
+          "nluByDomain": {
+            "default": {
+              "className": "NeuralNlu",
+              "settings": {}
+            }
+          },
+          "useStemDict": true
+        },
+        "stemDict": {
+          "an,email,employ,employe,for,is,it,legal,monitor,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "boss,can,email,my,read,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "allow,are,compani,employe,messag,to,track": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,at,email,my,privaci,regard,right,what,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,my,on,spi": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "email,is,legal,monitor,workplac": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,consent,email,employ,monitor,my,without,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "email,employe,from,law,protect,surveil,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "do,email,employ,employe,need,permiss,read,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,access,compani,email,for,is,it,legal,my,to,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "at,can,employ,internet,my,track,usag,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,from,my,person,see,sent,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,consid,email,privat,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,email,employ,legal,limit,monitor,of,the,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,all,can,communic,compani,employe,monitor": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "against,ani,are,at,email,feder,law,monitor,there,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,doe,email,employ,monitor,my,need,polici,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,account,an,can,comput,email,employ,from,on,person,read,sent,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,at,email,employ,my,review,subject,to,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,at,boss,can,email,look,me,my,tell,without": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,for,later,my,review,store": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,email,employ,for,is,it,my,of,privaci,read,to,violat": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,an,can,check,email,employ,employe,former,of": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "against,ani,do,email,have,i,legal,monitor,protect,workplac": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "boss,do,email,have,i,if,legal,my,read,recours,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "against,can,court,email,employ,in,me,my,use": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "befor,doe,email,employ,have,inform,me,monitor,my,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,access,compani,delet,email,for,is,it,legal,to,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,by,email,employ,law,restrict,state,surveil,there": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,an,can,employ,laptop,messag,monitor,on,privat,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "amend,doe,email,fourth,my,protect,the,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,for,i,monitor,my,sue,unauthor": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "call,differ,email,employ,from,is,monitor,of,phone,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "befor,boss,can,email,i,intercept,my,see,them": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "email,employe,for,is,it,legal,reason,record,secur,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,can,communic,compani,employe,monitor,of,outsid,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "act,are,communic,electron,email,my,privaci,protect,the,under": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,i,if,my,read,remot,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "differ,do,email,employe,have,privaci,remot,right": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "at,can,check,employ,gmail,i,if,it,my,use,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,i,in,my,real-tim,see,type,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,consid,email,employer’,my,properti,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,my,on,softwar,track,use,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "an,can,employ,messag,my,or,read,slack,team": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,chat,legal,monitor,on,restrict,the,what,workplac": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "employe,is,it,legal,messag,monitor,text,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,can,compani,employe,media,messag,monitor,social": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,can,employ,messag,my,on,person,phone,see,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,confidenti,consid,email,law,the,under": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,if,investig,i’m,my,read,under": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "and,differ,do,email,employe,have,privaci,privat,public,right": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "action,can,email,employ,i,if,legal,my,privaci,take,violat,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "an,between,can,condit,discuss,email,employ,employe,read,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,email,intercept,law,prevent,specif,there,workplac": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,boss,can,devic,email,i,if,in,log,my,on,person,read,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "against,can,email,employe,legal,monitor,step,take,unfair,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,from,home,i,if,monitor,my,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "disclos,do,email,employ,have,monitor,polici,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,access,boss,can,email,inbox,my,warrant,without": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "doe,email,employe,healthcar,hipaa,in,protect,set": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,email,employe,from,govern,protect,surveil": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,i,my,of,outsid,track,who,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "after,boss,can,email,i,my,quit,read": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,consid,email,labor,law,person,properti,under": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "can,email,employ,my,on,phone,read,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "are,email,employ,employe,legal,requir,store,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "be,can,email,employ,for,my,privaci,su,violat": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,do,email,employ,have,i,if,is,know,my,read,right,to": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "a,allow,an,as,email,employ,evid,in,is,lawsuit,to,use,work": {
+            "intent": "search_case_law",
+            "domain": "default"
+          },
+          "compani,email,employe,exist,for,penalti,privaci,that,violat,what": {
+            "intent": "search_case_law",
+            "domain": "default"
+          }
+        },
+        "intentDict": {
+          "search_case_law": "default"
+        },
+        "sentences": [
+          {
+            "domain": "default",
+            "utterance": "Is it legal for an employer to monitor employee emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my boss read my work emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are companies allowed to track employee messages?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What are my privacy rights at work regarding email?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer spy on my emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is workplace email monitoring legal?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer monitor my work email without my consent?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What laws protect employees from email surveillance?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Do employers need permission to read employee emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is it legal for a company to access my work email?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer track my internet usage at work?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer see my personal emails sent from work?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are work emails considered private?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What are the legal limits of employer email monitoring?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can a company monitor all employee communications?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are there any federal laws against email monitoring at work?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Does my employer need a policy to monitor emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can an employer read emails sent from a personal account on a work computer?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are my emails at work subject to employer review?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can a boss look at my emails without telling me?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer store my emails for later review?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is it a violation of privacy for my employer to read my emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can an employer check emails of a former employee?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Do I have any legal protections against workplace email monitoring?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What legal recourse do I have if my boss reads my emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer use my emails against me in court?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Does my employer have to inform me before monitoring emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is it legal for a company to access deleted work emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are there state laws restricting email surveillance by employers?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can an employer monitor private messages on a work laptop?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Does the Fourth Amendment protect my work emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can I sue my employer for unauthorized email monitoring?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is employer monitoring of work emails different from phone calls?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my boss intercept my emails before I see them?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is it legal to record employee emails for security reasons?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can a company monitor employee communications outside of work?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are my emails protected under the Electronic Communications Privacy Act?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can employers read my emails if I work remotely?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Do remote employees have different email privacy rights?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer check my Gmail if I use it at work?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer see what I type in my emails in real-time?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are my work emails considered my employer’s property?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer use email tracking software on my work email?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can an employer read my Slack or Teams messages?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What are the legal restrictions on monitoring workplace chats?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is it legal to monitor employee text messages?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can a company monitor employee social media messages?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer see my personal messages on a work phone?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are emails considered confidential under the law?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer read my emails if I’m under investigation?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Do public and private employees have different email privacy rights?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What legal actions can I take if my employer violates my email privacy?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can an employer read emails between employees discussing work conditions?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are there specific laws preventing workplace email interception?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my boss read my personal email if I log in on a work device?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What legal steps can employees take against unfair email monitoring?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer monitor my work email if I work from home?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Do employers have to disclose email monitoring policies?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my boss access my email inbox without a warrant?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Does HIPAA protect employee emails in healthcare settings?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are government employees protected from email surveillance?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer track who I email outside of work?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my boss read my emails after I quit?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are emails considered personal property under labor law?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer read my work emails on my phone?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Are employers legally required to store employee emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Can my employer be sued for violating email privacy?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Do I have a right to know if my employer is reading my emails?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "Is an employer allowed to use work emails as evidence in a lawsuit?",
+            "intent": "search_case_law"
+          },
+          {
+            "domain": "default",
+            "utterance": "What penalties exist for companies that violate employee email privacy?",
+            "intent": "search_case_law"
+          }
+        ],
+        "domains": {
+          "master_domain": {
+            "settings": {
+              "locale": "en",
+              "tag": "nlu-en",
+              "keepStopwords": true,
+              "nonefeatureValue": 1,
+              "nonedeltaMultiplier": 1.2,
+              "spellCheck": false,
+              "spellCheckDistance": 1,
+              "filterZeros": true,
+              "log": true
+            },
+            "features": {
+              "is": 1,
+              "it": 1,
+              "legal": 1,
+              "for": 1,
+              "an": 1,
+              "employ": 1,
+              "to": 1,
+              "monitor": 1,
+              "employe": 1,
+              "email": 1,
+              "can": 1,
+              "my": 1,
+              "boss": 1,
+              "read": 1,
+              "work": 1,
+              "are": 1,
+              "compani": 1,
+              "allow": 1,
+              "track": 1,
+              "messag": 1,
+              "what": 1,
+              "privaci": 1,
+              "right": 1,
+              "at": 1,
+              "regard": 1,
+              "spi": 1,
+              "on": 1,
+              "workplac": 1,
+              "without": 1,
+              "consent": 1,
+              "law": 1,
+              "protect": 1,
+              "from": 1,
+              "surveil": 1,
+              "do": 1,
+              "need": 1,
+              "permiss": 1,
+              "a": 1,
+              "access": 1,
+              "internet": 1,
+              "usag": 1,
+              "see": 1,
+              "person": 1,
+              "sent": 1,
+              "consid": 1,
+              "privat": 1,
+              "the": 1,
+              "limit": 1,
+              "of": 1,
+              "all": 1,
+              "communic": 1,
+              "there": 1,
+              "ani": 1,
+              "feder": 1,
+              "against": 1,
+              "doe": 1,
+              "polici": 1,
+              "account": 1,
+              "comput": 1,
+              "subject": 1,
+              "review": 1,
+              "look": 1,
+              "tell": 1,
+              "me": 1,
+              "store": 1,
+              "later": 1,
+              "violat": 1,
+              "check": 1,
+              "former": 1,
+              "i": 1,
+              "have": 1,
+              "recours": 1,
+              "if": 1,
+              "use": 1,
+              "in": 1,
+              "court": 1,
+              "inform": 1,
+              "befor": 1,
+              "delet": 1,
+              "state": 1,
+              "restrict": 1,
+              "by": 1,
+              "laptop": 1,
+              "fourth": 1,
+              "amend": 1,
+              "sue": 1,
+              "unauthor": 1,
+              "differ": 1,
+              "phone": 1,
+              "call": 1,
+              "intercept": 1,
+              "them": 1,
+              "record": 1,
+              "secur": 1,
+              "reason": 1,
+              "outsid": 1,
+              "under": 1,
+              "electron": 1,
+              "act": 1,
+              "remot": 1,
+              "gmail": 1,
+              "type": 1,
+              "real-tim": 1,
+              "employer’": 1,
+              "properti": 1,
+              "softwar": 1,
+              "slack": 1,
+              "or": 1,
+              "team": 1,
+              "chat": 1,
+              "text": 1,
+              "social": 1,
+              "media": 1,
+              "confidenti": 1,
+              "i’m": 1,
+              "investig": 1,
+              "public": 1,
+              "and": 1,
+              "action": 1,
+              "take": 1,
+              "between": 1,
+              "discuss": 1,
+              "condit": 1,
+              "specif": 1,
+              "prevent": 1,
+              "log": 1,
+              "devic": 1,
+              "step": 1,
+              "unfair": 1,
+              "home": 1,
+              "disclos": 1,
+              "inbox": 1,
+              "warrant": 1,
+              "hipaa": 1,
+              "healthcar": 1,
+              "set": 1,
+              "govern": 1,
+              "who": 1,
+              "after": 1,
+              "quit": 1,
+              "labor": 1,
+              "requir": 1,
+              "be": 1,
+              "su": 1,
+              "know": 1,
+              "as": 1,
+              "evid": 1,
+              "lawsuit": 1,
+              "penalti": 1,
+              "exist": 1,
+              "that": 1
+            },
+            "intents": {
+              "search_case_law": 1
+            },
+            "intentFeatures": {
+              "search_case_law": {
+                "is": 1,
+                "it": 1,
+                "legal": 1,
+                "for": 1,
+                "an": 1,
+                "employ": 1,
+                "to": 1,
+                "monitor": 1,
+                "employe": 1,
+                "email": 1,
+                "can": 1,
+                "my": 1,
+                "boss": 1,
+                "read": 1,
+                "work": 1,
+                "are": 1,
+                "compani": 1,
+                "allow": 1,
+                "track": 1,
+                "messag": 1,
+                "what": 1,
+                "privaci": 1,
+                "right": 1,
+                "at": 1,
+                "regard": 1,
+                "spi": 1,
+                "on": 1,
+                "workplac": 1,
+                "without": 1,
+                "consent": 1,
+                "law": 1,
+                "protect": 1,
+                "from": 1,
+                "surveil": 1,
+                "do": 1,
+                "need": 1,
+                "permiss": 1,
+                "a": 1,
+                "access": 1,
+                "internet": 1,
+                "usag": 1,
+                "see": 1,
+                "person": 1,
+                "sent": 1,
+                "consid": 1,
+                "privat": 1,
+                "the": 1,
+                "limit": 1,
+                "of": 1,
+                "all": 1,
+                "communic": 1,
+                "there": 1,
+                "ani": 1,
+                "feder": 1,
+                "against": 1,
+                "doe": 1,
+                "polici": 1,
+                "account": 1,
+                "comput": 1,
+                "subject": 1,
+                "review": 1,
+                "look": 1,
+                "tell": 1,
+                "me": 1,
+                "store": 1,
+                "later": 1,
+                "violat": 1,
+                "check": 1,
+                "former": 1,
+                "i": 1,
+                "have": 1,
+                "recours": 1,
+                "if": 1,
+                "use": 1,
+                "in": 1,
+                "court": 1,
+                "inform": 1,
+                "befor": 1,
+                "delet": 1,
+                "state": 1,
+                "restrict": 1,
+                "by": 1,
+                "laptop": 1,
+                "fourth": 1,
+                "amend": 1,
+                "sue": 1,
+                "unauthor": 1,
+                "differ": 1,
+                "phone": 1,
+                "call": 1,
+                "intercept": 1,
+                "them": 1,
+                "record": 1,
+                "secur": 1,
+                "reason": 1,
+                "outsid": 1,
+                "under": 1,
+                "electron": 1,
+                "act": 1,
+                "remot": 1,
+                "gmail": 1,
+                "type": 1,
+                "real-tim": 1,
+                "employer’": 1,
+                "properti": 1,
+                "softwar": 1,
+                "slack": 1,
+                "or": 1,
+                "team": 1,
+                "chat": 1,
+                "text": 1,
+                "social": 1,
+                "media": 1,
+                "confidenti": 1,
+                "i’m": 1,
+                "investig": 1,
+                "public": 1,
+                "and": 1,
+                "action": 1,
+                "take": 1,
+                "between": 1,
+                "discuss": 1,
+                "condit": 1,
+                "specif": 1,
+                "prevent": 1,
+                "log": 1,
+                "devic": 1,
+                "step": 1,
+                "unfair": 1,
+                "home": 1,
+                "disclos": 1,
+                "inbox": 1,
+                "warrant": 1,
+                "hipaa": 1,
+                "healthcar": 1,
+                "set": 1,
+                "govern": 1,
+                "who": 1,
+                "after": 1,
+                "quit": 1,
+                "labor": 1,
+                "requir": 1,
+                "be": 1,
+                "su": 1,
+                "know": 1,
+                "as": 1,
+                "evid": 1,
+                "lawsuit": 1,
+                "penalti": 1,
+                "exist": 1,
+                "that": 1
+              }
+            },
+            "featuresToIntent": {
+              "is": [
+                "search_case_law"
+              ],
+              "it": [
+                "search_case_law"
+              ],
+              "legal": [
+                "search_case_law"
+              ],
+              "for": [
+                "search_case_law"
+              ],
+              "an": [
+                "search_case_law"
+              ],
+              "employ": [
+                "search_case_law"
+              ],
+              "to": [
+                "search_case_law"
+              ],
+              "monitor": [
+                "search_case_law"
+              ],
+              "employe": [
+                "search_case_law"
+              ],
+              "email": [
+                "search_case_law"
+              ],
+              "can": [
+                "search_case_law"
+              ],
+              "my": [
+                "search_case_law"
+              ],
+              "boss": [
+                "search_case_law"
+              ],
+              "read": [
+                "search_case_law"
+              ],
+              "work": [
+                "search_case_law"
+              ],
+              "are": [
+                "search_case_law"
+              ],
+              "compani": [
+                "search_case_law"
+              ],
+              "allow": [
+                "search_case_law"
+              ],
+              "track": [
+                "search_case_law"
+              ],
+              "messag": [
+                "search_case_law"
+              ],
+              "what": [
+                "search_case_law"
+              ],
+              "privaci": [
+                "search_case_law"
+              ],
+              "right": [
+                "search_case_law"
+              ],
+              "at": [
+                "search_case_law"
+              ],
+              "regard": [
+                "search_case_law"
+              ],
+              "spi": [
+                "search_case_law"
+              ],
+              "on": [
+                "search_case_law"
+              ],
+              "workplac": [
+                "search_case_law"
+              ],
+              "without": [
+                "search_case_law"
+              ],
+              "consent": [
+                "search_case_law"
+              ],
+              "law": [
+                "search_case_law"
+              ],
+              "protect": [
+                "search_case_law"
+              ],
+              "from": [
+                "search_case_law"
+              ],
+              "surveil": [
+                "search_case_law"
+              ],
+              "do": [
+                "search_case_law"
+              ],
+              "need": [
+                "search_case_law"
+              ],
+              "permiss": [
+                "search_case_law"
+              ],
+              "a": [
+                "search_case_law"
+              ],
+              "access": [
+                "search_case_law"
+              ],
+              "internet": [
+                "search_case_law"
+              ],
+              "usag": [
+                "search_case_law"
+              ],
+              "see": [
+                "search_case_law"
+              ],
+              "person": [
+                "search_case_law"
+              ],
+              "sent": [
+                "search_case_law"
+              ],
+              "consid": [
+                "search_case_law"
+              ],
+              "privat": [
+                "search_case_law"
+              ],
+              "the": [
+                "search_case_law"
+              ],
+              "limit": [
+                "search_case_law"
+              ],
+              "of": [
+                "search_case_law"
+              ],
+              "all": [
+                "search_case_law"
+              ],
+              "communic": [
+                "search_case_law"
+              ],
+              "there": [
+                "search_case_law"
+              ],
+              "ani": [
+                "search_case_law"
+              ],
+              "feder": [
+                "search_case_law"
+              ],
+              "against": [
+                "search_case_law"
+              ],
+              "doe": [
+                "search_case_law"
+              ],
+              "polici": [
+                "search_case_law"
+              ],
+              "account": [
+                "search_case_law"
+              ],
+              "comput": [
+                "search_case_law"
+              ],
+              "subject": [
+                "search_case_law"
+              ],
+              "review": [
+                "search_case_law"
+              ],
+              "look": [
+                "search_case_law"
+              ],
+              "tell": [
+                "search_case_law"
+              ],
+              "me": [
+                "search_case_law"
+              ],
+              "store": [
+                "search_case_law"
+              ],
+              "later": [
+                "search_case_law"
+              ],
+              "violat": [
+                "search_case_law"
+              ],
+              "check": [
+                "search_case_law"
+              ],
+              "former": [
+                "search_case_law"
+              ],
+              "i": [
+                "search_case_law"
+              ],
+              "have": [
+                "search_case_law"
+              ],
+              "recours": [
+                "search_case_law"
+              ],
+              "if": [
+                "search_case_law"
+              ],
+              "use": [
+                "search_case_law"
+              ],
+              "in": [
+                "search_case_law"
+              ],
+              "court": [
+                "search_case_law"
+              ],
+              "inform": [
+                "search_case_law"
+              ],
+              "befor": [
+                "search_case_law"
+              ],
+              "delet": [
+                "search_case_law"
+              ],
+              "state": [
+                "search_case_law"
+              ],
+              "restrict": [
+                "search_case_law"
+              ],
+              "by": [
+                "search_case_law"
+              ],
+              "laptop": [
+                "search_case_law"
+              ],
+              "fourth": [
+                "search_case_law"
+              ],
+              "amend": [
+                "search_case_law"
+              ],
+              "sue": [
+                "search_case_law"
+              ],
+              "unauthor": [
+                "search_case_law"
+              ],
+              "differ": [
+                "search_case_law"
+              ],
+              "phone": [
+                "search_case_law"
+              ],
+              "call": [
+                "search_case_law"
+              ],
+              "intercept": [
+                "search_case_law"
+              ],
+              "them": [
+                "search_case_law"
+              ],
+              "record": [
+                "search_case_law"
+              ],
+              "secur": [
+                "search_case_law"
+              ],
+              "reason": [
+                "search_case_law"
+              ],
+              "outsid": [
+                "search_case_law"
+              ],
+              "under": [
+                "search_case_law"
+              ],
+              "electron": [
+                "search_case_law"
+              ],
+              "act": [
+                "search_case_law"
+              ],
+              "remot": [
+                "search_case_law"
+              ],
+              "gmail": [
+                "search_case_law"
+              ],
+              "type": [
+                "search_case_law"
+              ],
+              "real-tim": [
+                "search_case_law"
+              ],
+              "employer’": [
+                "search_case_law"
+              ],
+              "properti": [
+                "search_case_law"
+              ],
+              "softwar": [
+                "search_case_law"
+              ],
+              "slack": [
+                "search_case_law"
+              ],
+              "or": [
+                "search_case_law"
+              ],
+              "team": [
+                "search_case_law"
+              ],
+              "chat": [
+                "search_case_law"
+              ],
+              "text": [
+                "search_case_law"
+              ],
+              "social": [
+                "search_case_law"
+              ],
+              "media": [
+                "search_case_law"
+              ],
+              "confidenti": [
+                "search_case_law"
+              ],
+              "i’m": [
+                "search_case_law"
+              ],
+              "investig": [
+                "search_case_law"
+              ],
+              "public": [
+                "search_case_law"
+              ],
+              "and": [
+                "search_case_law"
+              ],
+              "action": [
+                "search_case_law"
+              ],
+              "take": [
+                "search_case_law"
+              ],
+              "between": [
+                "search_case_law"
+              ],
+              "discuss": [
+                "search_case_law"
+              ],
+              "condit": [
+                "search_case_law"
+              ],
+              "specif": [
+                "search_case_law"
+              ],
+              "prevent": [
+                "search_case_law"
+              ],
+              "log": [
+                "search_case_law"
+              ],
+              "devic": [
+                "search_case_law"
+              ],
+              "step": [
+                "search_case_law"
+              ],
+              "unfair": [
+                "search_case_law"
+              ],
+              "home": [
+                "search_case_law"
+              ],
+              "disclos": [
+                "search_case_law"
+              ],
+              "inbox": [
+                "search_case_law"
+              ],
+              "warrant": [
+                "search_case_law"
+              ],
+              "hipaa": [
+                "search_case_law"
+              ],
+              "healthcar": [
+                "search_case_law"
+              ],
+              "set": [
+                "search_case_law"
+              ],
+              "govern": [
+                "search_case_law"
+              ],
+              "who": [
+                "search_case_law"
+              ],
+              "after": [
+                "search_case_law"
+              ],
+              "quit": [
+                "search_case_law"
+              ],
+              "labor": [
+                "search_case_law"
+              ],
+              "requir": [
+                "search_case_law"
+              ],
+              "be": [
+                "search_case_law"
+              ],
+              "su": [
+                "search_case_law"
+              ],
+              "know": [
+                "search_case_law"
+              ],
+              "as": [
+                "search_case_law"
+              ],
+              "evid": [
+                "search_case_law"
+              ],
+              "lawsuit": [
+                "search_case_law"
+              ],
+              "penalti": [
+                "search_case_law"
+              ],
+              "exist": [
+                "search_case_law"
+              ],
+              "that": [
+                "search_case_law"
+              ]
+            },
+            "neuralNetwork": {
+              "settings": {
+                "locale": "en",
+                "tag": "nlu-en",
+                "keepStopwords": true,
+                "nonefeatureValue": 1,
+                "nonedeltaMultiplier": 1.2,
+                "spellCheck": false,
+                "spellCheckDistance": 1,
+                "filterZeros": true,
+                "log": true
+              },
+              "features": [
+                "is",
+                "it",
+                "legal",
+                "for",
+                "an",
+                "employ",
+                "to",
+                "monitor",
+                "employe",
+                "email",
+                "can",
+                "my",
+                "boss",
+                "read",
+                "work",
+                "are",
+                "compani",
+                "allow",
+                "track",
+                "messag",
+                "what",
+                "privaci",
+                "right",
+                "at",
+                "regard",
+                "spi",
+                "on",
+                "workplac",
+                "without",
+                "consent",
+                "law",
+                "protect",
+                "from",
+                "surveil",
+                "do",
+                "need",
+                "permiss",
+                "a",
+                "access",
+                "internet",
+                "usag",
+                "see",
+                "person",
+                "sent",
+                "consid",
+                "privat",
+                "the",
+                "limit",
+                "of",
+                "all",
+                "communic",
+                "there",
+                "ani",
+                "feder",
+                "against",
+                "doe",
+                "polici",
+                "account",
+                "comput",
+                "subject",
+                "review",
+                "look",
+                "tell",
+                "me",
+                "store",
+                "later",
+                "violat",
+                "check",
+                "former",
+                "i",
+                "have",
+                "recours",
+                "if",
+                "use",
+                "in",
+                "court",
+                "inform",
+                "befor",
+                "delet",
+                "state",
+                "restrict",
+                "by",
+                "laptop",
+                "fourth",
+                "amend",
+                "sue",
+                "unauthor",
+                "differ",
+                "phone",
+                "call",
+                "intercept",
+                "them",
+                "record",
+                "secur",
+                "reason",
+                "outsid",
+                "under",
+                "electron",
+                "act",
+                "remot",
+                "gmail",
+                "type",
+                "real-tim",
+                "employer’",
+                "properti",
+                "softwar",
+                "slack",
+                "or",
+                "team",
+                "chat",
+                "text",
+                "social",
+                "media",
+                "confidenti",
+                "i’m",
+                "investig",
+                "public",
+                "and",
+                "action",
+                "take",
+                "between",
+                "discuss",
+                "condit",
+                "specif",
+                "prevent",
+                "log",
+                "devic",
+                "step",
+                "unfair",
+                "home",
+                "disclos",
+                "inbox",
+                "warrant",
+                "hipaa",
+                "healthcar",
+                "set",
+                "govern",
+                "who",
+                "after",
+                "quit",
+                "labor",
+                "requir",
+                "be",
+                "su",
+                "know",
+                "as",
+                "evid",
+                "lawsuit",
+                "penalti",
+                "exist",
+                "that"
+              ],
+              "intents": [
+                "search_case_law"
+              ],
+              "perceptrons": [
+                [
+                  1.5819445848464966,
+                  0.29411762952804565,
+                  0.47361764311790466,
+                  -0.19976122677326202,
+                  -0.8886886239051819,
+                  0.8688426613807678,
+                  0.1540253758430481,
+                  1.285469651222229,
+                  2.0634429454803467,
+                  3.487379312515259,
+                  2.762089967727661,
+                  0.9830273389816284,
+                  0.855093240737915,
+                  0.5105751752853394,
+                  0.7668197154998779,
+                  1.935427188873291,
+                  1.0108959674835205,
+                  0.775931179523468,
+                  0.6600942015647888,
+                  2.7665212154388428,
+                  0.8489999771118164,
+                  0.5735056400299072,
+                  -0.3380998969078064,
+                  1.2939941883087158,
+                  -0.36660236120224,
+                  1.0105024576187134,
+                  0.19451837241649628,
+                  2.2985689640045166,
+                  -0.32601433992385864,
+                  -0.5485677719116211,
+                  1.0182462930679321,
+                  0.9475918412208557,
+                  0.1726161688566208,
+                  0.744740903377533,
+                  1.2394542694091797,
+                  0.32946857810020447,
+                  0.5563286542892456,
+                  0.6394861340522766,
+                  0.08599214255809784,
+                  0.9756203889846802,
+                  0.9756203889846802,
+                  0.5154460072517395,
+                  0.23901242017745972,
+                  -0.3305903971195221,
+                  1.9417918920516968,
+                  1.271172046661377,
+                  0.7818052172660828,
+                  -0.5025250315666199,
+                  0.08439940214157104,
+                  0.719152569770813,
+                  0.8413065075874329,
+                  0.3092797100543976,
+                  -0.5314598083496094,
+                  0.14926254749298096,
+                  -0.4421747326850891,
+                  1.0824084281921387,
+                  0.6407544016838074,
+                  0.5109462738037109,
+                  0.5109462738037109,
+                  -0.36459049582481384,
+                  0.3624011278152466,
+                  -0.2508559823036194,
+                  -0.2508559823036194,
+                  0.23827677965164185,
+                  0.5127995014190674,
+                  0.732483983039856,
+                  0.5387387871742249,
+                  0.8369303941726685,
+                  -0.3098667562007904,
+                  -0.12592501938343048,
+                  0.8150765299797058,
+                  0.4767245352268219,
+                  0.0021109567023813725,
+                  0.9104807376861572,
+                  0.4717024564743042,
+                  0.36396774649620056,
+                  0.13086901605129242,
+                  0.4913906455039978,
+                  1.1635775566101074,
+                  0.15246061980724335,
+                  0.8598803877830505,
+                  0.15246061980724335,
+                  -0.037067536264657974,
+                  0.7442529797554016,
+                  0.7442529797554016,
+                  0.3405146896839142,
+                  0.3405146896839142,
+                  1.0722506046295166,
+                  -0.18791288137435913,
+                  0.5368901491165161,
+                  0.3646606206893921,
+                  0.3607807457447052,
+                  0.5543599128723145,
+                  0.5543599128723145,
+                  0.5543599128723145,
+                  0.10016682744026184,
+                  0.32380154728889465,
+                  -0.14380493760108948,
+                  -0.14380493760108948,
+                  0.683781623840332,
+                  1.1533761024475098,
+                  0.021306240931153297,
+                  0.021306240931153297,
+                  0.20139500498771667,
+                  0.2961138188838959,
+                  -0.7605186700820923,
+                  0.8799334764480591,
+                  0.8799334764480591,
+                  0.8799334764480591,
+                  0.7098236680030823,
+                  0.830843985080719,
+                  -0.4978010058403015,
+                  -0.4978010058403015,
+                  -0.025341127067804337,
+                  0.3989350497722626,
+                  0.3989350497722626,
+                  -0.35403844714164734,
+                  -0.35403844714164734,
+                  -0.1623837947845459,
+                  -0.4288397431373596,
+                  0.04405120760202408,
+                  0.04405120760202408,
+                  0.04405120760202408,
+                  0.006669843103736639,
+                  0.006669843103736639,
+                  -0.5084786415100098,
+                  -0.5084786415100098,
+                  -0.26735031604766846,
+                  -0.26735031604766846,
+                  -0.631359338760376,
+                  0.8667635321617126,
+                  0.4753194749355316,
+                  0.4753194749355316,
+                  0.43868011236190796,
+                  0.43868011236190796,
+                  0.43868011236190796,
+                  -0.05161638557910919,
+                  -0.17619158327579498,
+                  0.4068867862224579,
+                  0.4068867862224579,
+                  0.09025305509567261,
+                  -0.21853096783161163,
+                  0.11708080768585205,
+                  0.11708080768585205,
+                  -0.519292950630188,
+                  0.15684455633163452,
+                  0.15684455633163452,
+                  0.15684455633163452,
+                  0.3021481931209564,
+                  0.3021481931209564,
+                  0.3021481931209564,
+                  5.045667211425042
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    "intentDomains": {},
+    "extraSentences": [
+      [
+        "en",
+        "Is it legal for an employer to monitor employee emails?"
+      ],
+      [
+        "en",
+        "Can my boss read my work emails?"
+      ],
+      [
+        "en",
+        "Are companies allowed to track employee messages?"
+      ],
+      [
+        "en",
+        "What are my privacy rights at work regarding email?"
+      ],
+      [
+        "en",
+        "Can my employer spy on my emails?"
+      ],
+      [
+        "en",
+        "Is workplace email monitoring legal?"
+      ],
+      [
+        "en",
+        "Can my employer monitor my work email without my consent?"
+      ],
+      [
+        "en",
+        "What laws protect employees from email surveillance?"
+      ],
+      [
+        "en",
+        "Do employers need permission to read employee emails?"
+      ],
+      [
+        "en",
+        "Is it legal for a company to access my work email?"
+      ],
+      [
+        "en",
+        "Can my employer track my internet usage at work?"
+      ],
+      [
+        "en",
+        "Can my employer see my personal emails sent from work?"
+      ],
+      [
+        "en",
+        "Are work emails considered private?"
+      ],
+      [
+        "en",
+        "What are the legal limits of employer email monitoring?"
+      ],
+      [
+        "en",
+        "Can a company monitor all employee communications?"
+      ],
+      [
+        "en",
+        "Are there any federal laws against email monitoring at work?"
+      ],
+      [
+        "en",
+        "Does my employer need a policy to monitor emails?"
+      ],
+      [
+        "en",
+        "Can an employer read emails sent from a personal account on a work computer?"
+      ],
+      [
+        "en",
+        "Are my emails at work subject to employer review?"
+      ],
+      [
+        "en",
+        "Can a boss look at my emails without telling me?"
+      ],
+      [
+        "en",
+        "Can my employer store my emails for later review?"
+      ],
+      [
+        "en",
+        "Is it a violation of privacy for my employer to read my emails?"
+      ],
+      [
+        "en",
+        "Can an employer check emails of a former employee?"
+      ],
+      [
+        "en",
+        "Do I have any legal protections against workplace email monitoring?"
+      ],
+      [
+        "en",
+        "What legal recourse do I have if my boss reads my emails?"
+      ],
+      [
+        "en",
+        "Can my employer use my emails against me in court?"
+      ],
+      [
+        "en",
+        "Does my employer have to inform me before monitoring emails?"
+      ],
+      [
+        "en",
+        "Is it legal for a company to access deleted work emails?"
+      ],
+      [
+        "en",
+        "Are there state laws restricting email surveillance by employers?"
+      ],
+      [
+        "en",
+        "Can an employer monitor private messages on a work laptop?"
+      ],
+      [
+        "en",
+        "Does the Fourth Amendment protect my work emails?"
+      ],
+      [
+        "en",
+        "Can I sue my employer for unauthorized email monitoring?"
+      ],
+      [
+        "en",
+        "Is employer monitoring of work emails different from phone calls?"
+      ],
+      [
+        "en",
+        "Can my boss intercept my emails before I see them?"
+      ],
+      [
+        "en",
+        "Is it legal to record employee emails for security reasons?"
+      ],
+      [
+        "en",
+        "Can a company monitor employee communications outside of work?"
+      ],
+      [
+        "en",
+        "Are my emails protected under the Electronic Communications Privacy Act?"
+      ],
+      [
+        "en",
+        "Can employers read my emails if I work remotely?"
+      ],
+      [
+        "en",
+        "Do remote employees have different email privacy rights?"
+      ],
+      [
+        "en",
+        "Can my employer check my Gmail if I use it at work?"
+      ],
+      [
+        "en",
+        "Can my employer see what I type in my emails in real-time?"
+      ],
+      [
+        "en",
+        "Are my work emails considered my employer’s property?"
+      ],
+      [
+        "en",
+        "Can my employer use email tracking software on my work email?"
+      ],
+      [
+        "en",
+        "Can an employer read my Slack or Teams messages?"
+      ],
+      [
+        "en",
+        "What are the legal restrictions on monitoring workplace chats?"
+      ],
+      [
+        "en",
+        "Is it legal to monitor employee text messages?"
+      ],
+      [
+        "en",
+        "Can a company monitor employee social media messages?"
+      ],
+      [
+        "en",
+        "Can my employer see my personal messages on a work phone?"
+      ],
+      [
+        "en",
+        "Are emails considered confidential under the law?"
+      ],
+      [
+        "en",
+        "Can my employer read my emails if I’m under investigation?"
+      ],
+      [
+        "en",
+        "Do public and private employees have different email privacy rights?"
+      ],
+      [
+        "en",
+        "What legal actions can I take if my employer violates my email privacy?"
+      ],
+      [
+        "en",
+        "Can an employer read emails between employees discussing work conditions?"
+      ],
+      [
+        "en",
+        "Are there specific laws preventing workplace email interception?"
+      ],
+      [
+        "en",
+        "Can my boss read my personal email if I log in on a work device?"
+      ],
+      [
+        "en",
+        "What legal steps can employees take against unfair email monitoring?"
+      ],
+      [
+        "en",
+        "Can my employer monitor my work email if I work from home?"
+      ],
+      [
+        "en",
+        "Do employers have to disclose email monitoring policies?"
+      ],
+      [
+        "en",
+        "Can my boss access my email inbox without a warrant?"
+      ],
+      [
+        "en",
+        "Does HIPAA protect employee emails in healthcare settings?"
+      ],
+      [
+        "en",
+        "Are government employees protected from email surveillance?"
+      ],
+      [
+        "en",
+        "Can my employer track who I email outside of work?"
+      ],
+      [
+        "en",
+        "Can my boss read my emails after I quit?"
+      ],
+      [
+        "en",
+        "Are emails considered personal property under labor law?"
+      ],
+      [
+        "en",
+        "Can my employer read my work emails on my phone?"
+      ],
+      [
+        "en",
+        "Are employers legally required to store employee emails?"
+      ],
+      [
+        "en",
+        "Can my employer be sued for violating email privacy?"
+      ],
+      [
+        "en",
+        "Do I have a right to know if my employer is reading my emails?"
+      ],
+      [
+        "en",
+        "Is an employer allowed to use work emails as evidence in a lawsuit?"
+      ],
+      [
+        "en",
+        "What penalties exist for companies that violate employee email privacy?"
+      ]
+    ]
+  },
+  "ner": {
+    "settings": {
+      "tag": "ner",
+      "entityPreffix": "%",
+      "entitySuffix": "%"
+    },
+    "rules": {}
+  },
+  "nlgManager": {
+    "settings": {
+      "tag": "nlg-manager"
+    },
+    "responses": {}
+  },
+  "actionManager": {
+    "settings": {
+      "tag": "action-manager"
+    },
+    "actions": {}
+  },
+  "slotManager": {}
+}

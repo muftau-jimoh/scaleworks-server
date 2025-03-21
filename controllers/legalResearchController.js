@@ -1,19 +1,16 @@
 const { callLegalAssistant, callGitHubLegalAssistant } = require("../services/legalAssistantService");
 
+
+/**
+ * Fetches case law from CourtListener with authentication and summarizes it using GPT-4.
+ */
 exports.performLegalResearch = async (req, res) => {
   try {
     const { query } = req.query;
-    const userId = req.user?.id;
+    // const userId = req.user?.id;
 
     if (!query) {
-      res.setHeader("Content-Type", "text/event-stream");
-      res.write(
-        `event: error\ndata: ${JSON.stringify({
-          type: "BAD_REQUEST",
-          message: "Query is required",
-        })}\n\n`
-      );
-      return res.end(); // Ensure function exits
+      return res.status(400).json({ error: "Missing legal question." });
     }
 
     res.setHeader("Content-Type", "text/event-stream");
@@ -21,14 +18,14 @@ exports.performLegalResearch = async (req, res) => {
     res.setHeader("Connection", "keep-alive");
     res.flushHeaders();
 
-    let streamClosed = false; // Track stream status
+    let streamClosed = false;
 
+    // Call GPT-4 with case law context
     await callGitHubLegalAssistant(
       query,
       (data) => {
-        if (streamClosed) return; // Avoid writing after stream is closed
+        if (streamClosed) return;
         if (data) {
-          // console.log('data: ', data)
           res.write(
             `data: ${JSON.stringify({
               type: "SUCCESS",
@@ -39,7 +36,7 @@ exports.performLegalResearch = async (req, res) => {
       },
       (error) => {
         console.error("Legal Assistant Error:", error);
-        if (streamClosed) return; // Avoid duplicate writes
+        if (streamClosed) return;
         res.write(
           `event: error\ndata: ${JSON.stringify({
             type: "ERROR",
@@ -48,7 +45,6 @@ exports.performLegalResearch = async (req, res) => {
         );
         res.end();
         streamClosed = true;
-        return; // Stop further execution
       }
     );
 
@@ -59,9 +55,7 @@ exports.performLegalResearch = async (req, res) => {
           message: "Streaming complete",
         })}\n\n`
       );
-      setTimeout(() => {
-        res.end();
-      }, 500);
+      setTimeout(() => res.end(), 500);
     }
   } catch (error) {
     console.error("Streaming Error:", error);
