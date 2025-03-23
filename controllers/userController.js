@@ -7,10 +7,10 @@ const { getUserByAuthId } = require("../utils/getUserByAuthId");
 
 // User Signup
 exports.signup = async (req, res) => {
-    const { email, user_name, password } = req.body;
+    const { organization_name, email, user_name, password } = req.body;
 
-    if (!email || !user_name || !password) {
-        return res.status(400).json({ error: "Email, user name, and password are required." });
+    if (!organization_name || !email || !user_name || !password) {
+        return res.status(400).json({ error: "Organization Name, Email, user name, and password are required." });
     }
 
     try {
@@ -43,6 +43,7 @@ exports.signup = async (req, res) => {
                 auth_id: data.user.id,
                 user_name: user_name,
                 email: data.user.email,
+                organization_name
             });
 
             if (profileError) {

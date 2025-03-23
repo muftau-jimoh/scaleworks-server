@@ -114,7 +114,7 @@ async function queryChatBotService(query, onData, onError) {
     // Step 1: Fetch relevant context from Pinecone
     const relevantContext = await fetchRelevantContext(query);
 
-    await askAIFromGitHub(relevantContext, query, onData, onError);
+    await askAI(relevantContext, query, onData, onError);
   } catch (error) {
     console.error("OpenAI Streaming Error:", error);
     onError(error);
