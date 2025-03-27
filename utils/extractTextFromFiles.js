@@ -1,27 +1,23 @@
-const fs = require("fs");
+const fs = require("fs").promises; // Use async fs methods
 const path = require("path");
 const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 const csvParser = require("csv-parser");
 const xlsx = require("xlsx");
-const MarkdownIt = require("markdown-it");
+const { JSDOM } = require("jsdom"); // Helps strip HTML from markdown
+const { Readable } = require("stream");
 
-const md = new MarkdownIt();
-
-/**
- * Extracts text from a contract file based on its extension.
- */
 async function extractTextFromFile(file) {
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (ext === ".pdf") {
-    const buffer = fs.readFileSync(file.path);
+    const buffer = await fs.readFile(file.path);
     const data = await pdfParse(buffer);
     return data.text;
   }
 
   if (ext === ".docx") {
-    const buffer = fs.readFileSync(file.path);
+    const buffer = await fs.readFile(file.path);
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
   }
@@ -29,7 +25,7 @@ async function extractTextFromFile(file) {
   if (ext === ".csv") {
     return new Promise((resolve, reject) => {
       const results = [];
-      fs.createReadStream(file.path)
+      Readable.from(fs.readFile(file.path))
         .pipe(csvParser())
         .on("data", (row) => results.push(Object.values(row).join(" ")))
         .on("end", () => resolve(results.join("\n")))
@@ -47,20 +43,20 @@ async function extractTextFromFile(file) {
   }
 
   if (ext === ".md") {
-    const content = fs.readFileSync(file.path, "utf-8");
-    return md.render(content);
+    const content = await fs.readFile(file.path, "utf-8");
+    const dom = new JSDOM(content);
+    return dom.window.document.body.textContent || "";
   }
 
-  if (ext === ".txt" || ext === ".doc") {
-    return fs.readFileSync(file.path, "utf-8");
+  if (ext === ".txt") {
+    return await fs.readFile(file.path, "utf-8");
   }
 
   throw new Error(`Unsupported file type: ${ext}`);
 }
 
-
 /**
- * Extracts text from multiple files and returns as an array.
+ * Extracts text from multiple files asynchronously.
  */
 async function extractTextFromFiles(files) {
   return Promise.all(
@@ -70,11 +66,10 @@ async function extractTextFromFiles(files) {
         return { status: "success", text };
       } catch (error) {
         console.error(`Error extracting text from ${file.originalname}:`, error.message);
-        return { status: "failed", error: `Error extracting text from ${file.originalname}: ${error.message}` };
+        return { status: "failed", error: error.message };
       }
     })
   );
 }
 
-
-module.exports = { extractTextFromFiles };
+module.exports = { extractTextFromFiles, extractTextFromFile };

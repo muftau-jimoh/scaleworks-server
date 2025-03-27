@@ -1,12 +1,23 @@
 const queryChatBotService = require("../services/chatbotService");
+const chunkText = require("../services/chunkText");
+const uploadToPinecone = require("../services/uploadToPinecone");
+const { extractTextFromFile } = require("../utils/extractTextFromFiles");
+const fs = require("fs-extra");
+
+const supabase = require("../config/supabaseClient");
+
 
 async function chatWithBot(req, res) {
-  const userId = req.user?.id;
+  const username = req.user?.user_name;
   const { query } = req.body; // Get uploaded audio file
 
   // Check if file is uploaded
   if (!query) {
     return res.status(400).json({ error: "A query is required." });
+  }
+  
+  if (!username) {
+    return res.status(400).json({ error: "Username is required." });
   }
 
   try {
@@ -19,10 +30,11 @@ async function chatWithBot(req, res) {
     let streamClosed = false; // Track stream status
 
     await queryChatBotService(
+      username,
       query,
       (data) => {
         if (!streamClosed && data) {
-          console.log('data: ', data)
+          console.log("data: ", data);
           res.write(
             `data: ${JSON.stringify({ type: "SUCCESS", message: data })}\n\n`
           );
@@ -66,4 +78,94 @@ async function chatWithBot(req, res) {
   }
 }
 
-module.exports = chatWithBot;
+async function uploadToKnowledgeBase(req, res) {
+  let files = [];
+
+  try {
+    const {id: userId, user_name: username} = req.user;
+    files = req.files;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: "At least one file is required" });
+    }
+
+    if (!username) {
+      return res.status(400).json({ error: "Username is required." });
+    }
+
+    let allChunks = [];
+    let errors = [];
+    let uploadedFileNames = [];
+
+    for (const file of files) {
+      try {
+
+        const extractedText = await extractTextFromFile(file);
+        if (!extractedText) {
+          errors.push(`Failed to extract text from ${file.originalname}`);
+          continue;
+        }
+
+        uploadedFileNames.push(file.originalname);
+        
+        // Split text into chunks
+        const chunks = chunkText(extractedText, 500);
+        allChunks.push(...chunks);
+      } catch (err) {
+        console.error(`Error processing ${file.originalname}:`, err);
+        errors.push(`Error processing ${file.originalname}: ${err.message}`);
+      } finally {
+        // Ensure file is deleted after processing
+        await fs.remove(file.path);
+      }
+    }
+
+    // Upload to Pinecone if there are valid chunks
+    if (allChunks.length > 0) {
+      const uploadRes = await uploadToPinecone(username, allChunks);
+      if (uploadRes?.error) {
+        console.error("❌ Pinecone Upload Error:", uploadRes?.error);
+        return res.status(500).json({
+          message: "Failed to upload data to Pinecone.",
+        });
+      }
+    }
+
+    // Update user's knowledgeBase in Supabase
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("knowledgeBase")
+      .eq("id", userId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      // Ignore the error if the column is empty
+      console.error("❌ Supabase Fetch Error:", error);
+      return res.status(500).json({ error: "Failed to retrieve user data." });
+    }
+
+    const existingFiles = data?.knowledgeBase || [];
+    const updatedFiles = [...new Set([...existingFiles, ...uploadedFileNames])]; // Avoid duplicates
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ knowledgeBase: updatedFiles })
+      .eq("id", userId);
+
+    if (updateError) {
+      console.error("❌ Supabase Update Error:", updateError);
+      return res.status(500).json({ error: "Failed to update user data." });
+    }
+
+    return res.status(200).json({
+      message: "Files uploaded and stored in knowledgeBase.",
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error("Upload Error:", error);
+    res.status(500).json({ error: "Internal Server Error." });
+  }
+}
+
+
+module.exports = { chatWithBot, uploadToKnowledgeBase };

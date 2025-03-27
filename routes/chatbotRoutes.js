@@ -1,9 +1,10 @@
 const express = require("express");
-const chatWithBot = require(".././controllers/chatbotController");
+const {chatWithBot, uploadToKnowledgeBase} = require(".././controllers/chatbotController");
 const { isAuthenticatedUser } = require("../middlewares/authMiddleware");
+const {upload, validateFileUpload} = require("../middlewares/uploadFile");
 const router = express.Router();
 
-// router.get("/", isAuthenticatedUser, chatWithBot);
-router.get("/", chatWithBot);
+router.get("/", isAuthenticatedUser, chatWithBot);
+router.get("/upload-knowledge", isAuthenticatedUser, upload.array("files"), validateFileUpload, uploadToKnowledgeBase);
 
 module.exports = router;

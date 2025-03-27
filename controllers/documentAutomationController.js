@@ -3,6 +3,7 @@ const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const {
   callDocumentAutomationService,
+  getExcelTemplateStructure,
   generateExcel,
 } = require("../services/documentService"); // Function to fill the template
 const { uploadToCloudinary } = require("../utils/fileUpload");
@@ -133,7 +134,7 @@ exports.automateDocument = async (req, res) => {
       return res.status(400).json({ error: "Your PDF Form is required" });
     }
 
-    // Upload file concurrently to Cloudinary
+    // ✅ Step 1: Upload to Cloudinary
     const folder = `scaleworks/${userId}/documentAutomation/pdfs`;
     const documentUrl = await uploadToCloudinary(file, folder);
 
@@ -141,52 +142,73 @@ exports.automateDocument = async (req, res) => {
       return res.status(500).json({ error: "File upload failed" });
     }
 
-    // Call Stack AI Document Automation service with the file URL
-    let extractedData = await callDocumentAutomationService(
-      documentUrl,
-      userId
-    );
-
-    if (!extractedData) {
-      return res
-        .status(500)
-        .json({ error: "Error extracting text from document" });
+    // ✅ Step 2: Extract text using Google OCR
+    const extractedText = await extractTextFromPDF(documentUrl);
+    if (!extractedText) {
+      return res.status(500).json({ error: "Text extraction failed" });
     }
 
-    // Paths
-    const templatePath = path.join(
+    console.log('extractedText: ', extractedText)
+
+    // ✅ Step 3: Analyze text with GPT-4
+    const EXCEL_TEMPLATE_PATH = path.join(
       __dirname,
       "../assets/template/schedule_template.xlsx"
     );
-    const userFolder = path.join(__dirname, `../assets/generated/`);
+    const excelTemplateStructure = await getExcelTemplateStructure(EXCEL_TEMPLATE_PATH);
+    
+    console.log('excelTemplateStructure: ', excelTemplateStructure)
+    
+    const extractedData = await analyzeExtractedText(extractedText, excelTemplateStructure);
+    if (!extractedData) {
+      return res.status(500).json({ error: "AI analysis failed" });
+    }
+    console.log('extractedData: ', extractedData)
 
-    if (!fs.existsSync(userFolder)) {
-      fs.mkdirSync(userFolder, { recursive: true }); // Create user folder if it doesn't exist
+
+
+    // ✅ Step 4: Copy Excel template
+    const GENERATED_EXCEL_PATH = path.join(__dirname, `../assets/generated/`);
+    if (!fs.existsSync(GENERATED_EXCEL_PATH)) {
+      fs.mkdirSync(GENERATED_EXCEL_PATH, { recursive: true }); // Create user folder if it doesn't exist
     }
 
     // Create a unique copy for the request
     const newFileName = `schedule_${uuidv4()}-${userId}.xlsx`;
-    const newFilePath = path.join(userFolder, newFileName);
-    fs.copyFileSync(templatePath, newFilePath);
+    const newFilePath = path.join(GENERATED_EXCEL_PATH, newFileName);
+    fs.copyFileSync(EXCEL_TEMPLATE_PATH, newFilePath);
 
-    // Generate an Excel file with extracted data
+    // ✅ Step 5: Populate Excel with extracted data
     const responseMessage = await generateExcel(newFilePath, extractedData);
 
     if (responseMessage?.error) {
       return res.status(500).json({ error: "Error generating Excel Sheet" });
     }
 
-    // Upload generated excel to Cloudinary
+    // ✅ Step 6: Upload Excel to Cloudinary
     const excelFolder = `scaleworks/${userId}/documentAutomation/excels`;
     const excelUrl = await uploadToCloudinary(
       { path: newFilePath },
       excelFolder
     );
 
-    // Send the file to the client
+    // ✅ Step 7: Send response
     res.status(200).json({ excelURL: excelUrl });
   } catch (error) {
     console.error("Error processing document:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+    // // Call Stack AI Document Automation service with the file URL
+    // let extractedData = await callDocumentAutomationService(
+    //   documentUrl,
+    //   userId
+    // );
+
+    // if (!extractedData) {
+    //   return res
+    //     .status(500)
+    //     .json({ error: "Error extracting text from document" });
+    // }
+    

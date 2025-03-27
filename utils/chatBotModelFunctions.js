@@ -14,10 +14,10 @@ const index = pc.index(PINECONE_INDEX_NAME_1);
  * @param {string} query - User's question
  * @returns {Promise<string>} - Relevant context from the knowledge base
  */
-async function fetchRelevantContext(query) {
+async function fetchRelevantContext(username, query) {
   const queryEmbedding = await getEmbeddingFromGithub(query);
 
-  const results = await index.query({
+  const results = await index.namespace(username).query({
     vector: queryEmbedding,
     topK: 5, // Retrieve top 5 relevant chunks
     includeMetadata: true,

@@ -101,7 +101,7 @@ exports.logout = async (req, res) => {
         }
 
         // Call Supabase signOut to invalidate the token
-        const { error } = await supabase.auth.signOut();
+        await supabase.auth.signOut();
 
         // Clear the cookie
         res.clearCookie("access_token", {

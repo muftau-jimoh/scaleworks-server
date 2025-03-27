@@ -3,7 +3,6 @@ const { performLegalResearch } = require(".././controllers/legalResearchControll
 const { isAuthenticatedUser } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
-// router.get("/", isAuthenticatedUser, performLegalResearch);
-router.get("/", performLegalResearch);
+router.get("/", isAuthenticatedUser, performLegalResearch);
 
 module.exports = router;

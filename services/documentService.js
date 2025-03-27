@@ -3,6 +3,7 @@ const axios = require("axios");
 const ExcelJS = require("exceljs");
 const { extractJSON } = require("../utils/JSONFromString");
 const { cellPosition } = require("../utils/DSConstants");
+const vision = require("@google-cloud/vision");
 
 require("dotenv").config();
 
@@ -85,5 +86,45 @@ exports.generateExcel = async (filePath, extractedData) => {
     return { success: "Excel Sheet generated succesfully." };
   } catch (error) {
     return { error: "Error generating Excel Sheet." };
+  }
+};
+
+
+exports.getExcelTemplateStructure = async (filePath) => {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(filePath);
+
+  let structure = {};
+  
+  workbook.eachSheet((sheet) => {
+    let sheetData = {};
+    sheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell, colNumber) => {
+        const cellValue = cell.value?.toString().trim();
+        if (cellValue) {
+          sheetData[cellValue] = "";
+        }
+      });
+    });
+    structure[sheet.name] = sheetData;
+  });
+
+  return structure;
+};
+
+
+
+
+// Initialize Google Cloud Vision client
+const client = new vision.ImageAnnotatorClient();
+
+exports.extractTextFromPDF = async (pdfUrl) => {
+  try {
+    const [result] = await client.documentTextDetection(pdfUrl);
+    const fullText = result.fullTextAnnotation?.text || "";
+    return fullText;
+  } catch (error) {
+    console.error("Google OCR Error:", error);
+    throw new Error("Error extracting text from document.");
   }
 };

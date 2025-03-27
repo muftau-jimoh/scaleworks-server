@@ -104,7 +104,7 @@ async function askAI(relevantContext, query, onData, onError) {
  * @param {string} query - User's question
  * @param {function} onData - Callback to handle streamed data
  */
-async function queryChatBotService(query, onData, onError) {
+async function queryChatBotService(username, query, onData, onError) {
   try {
     if (!query) {
       onError("Query is required.");
@@ -112,7 +112,7 @@ async function queryChatBotService(query, onData, onError) {
     }
 
     // Step 1: Fetch relevant context from Pinecone
-    const relevantContext = await fetchRelevantContext(query);
+    const relevantContext = await fetchRelevantContext(username, query);
 
     await askAI(relevantContext, query, onData, onError);
   } catch (error) {
