@@ -13,7 +13,6 @@ const documentAutomationRoutes = require("./routes/documentAutomationRoutes.js")
 
 
 const cookieParser = require('cookie-parser');
-const { trainNlpModel } = require('./services/nlpCaseSummary.js');
 
 const app = express();
 
@@ -22,7 +21,7 @@ dotenv.config(); // Load environment variables
 
 
 // Middleware
-const allowedOrigins = ["https://scalesworks.vercel.app"];
+const allowedOrigins = ["http://localhost:3000"];
 
 app.use(
     cors({

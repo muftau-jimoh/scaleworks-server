@@ -2,15 +2,17 @@ const supabase = require("../config/supabaseClient");
 
 require("dotenv").config();
 
-const { getUserByAuthId } = require("../utils/getUserByAuthId");
+const { getUserByAuthId, validateForm } = require("../utils/getUserByAuthId");
 
 
 // User Signup
 exports.signup = async (req, res) => {
     const { organization_name, email, user_name, password } = req.body;
 
-    if (!organization_name || !email || !user_name || !password) {
-        return res.status(400).json({ error: "Organization Name, Email, user name, and password are required." });
+    const validationError = validateForm({ organization_name, email, user_name, password })
+    
+    if (validationError) {
+        return res.status(400).json({ error: validationError });
     }
 
     try {
@@ -47,7 +49,7 @@ exports.signup = async (req, res) => {
             });
 
             if (profileError) {
-                return res.status(500).json({ message: "Failed to create user profile - Try again later", error: profileError });
+                return res.status(500).json({ error: profileError });
             }
         }
 
