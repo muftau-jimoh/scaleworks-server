@@ -4,7 +4,7 @@ const { isAuthenticatedUser } = require("../middlewares/authMiddleware");
 const { upload, validateFileUpload } = require("../middlewares/uploadFile");
 const router = express.Router();
 
-router.post("/", isAuthenticatedUser, upload.single("file"), validateFileUpload, automateDocument);
+router.post("/", upload.single("file"), validateFileUpload, automateDocument);
 
 module.exports = router;
  

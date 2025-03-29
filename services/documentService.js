@@ -1,13 +1,11 @@
-const XLSX = require("xlsx-style");
 const axios = require("axios");
-const ExcelJS = require("exceljs");
 const { extractJSON } = require("../utils/JSONFromString");
+const ExcelJS = require("exceljs");
 const { cellPosition } = require("../utils/DSConstants");
-const vision = require("@google-cloud/vision");
 
 require("dotenv").config();
 
-const STACK_AI_API_TOKEN_TWO = process.env.STACK_AI_API_TOKEN_TWO;
+const MY_STACK_AI_API_TOKEN_TWO = process.env.MY_STACK_AI_API_TOKEN_TWO;
 
 const in_0 = `here's the json response structure to follow:
 
@@ -17,8 +15,6 @@ const in_0 = `here's the json response structure to follow:
 
 const documentAutomationURL =
   "https://api.stack-ai.com/inference/v0/run/b3ea6100-6e2a-40c6-97f2-aa9f3c066f37/67b68780ed1f0ac8273d3eeb";
-
-
 
 
 exports.callDocumentAutomationService = async (documentUrl, userId) => {
@@ -31,7 +27,7 @@ exports.callDocumentAutomationService = async (documentUrl, userId) => {
   try {
     const response = await axios.post(documentAutomationURL, data, {
       headers: {
-        Authorization: `Bearer ${STACK_AI_API_TOKEN_TWO}`,
+        "Authorization": `Bearer ${MY_STACK_AI_API_TOKEN_TWO}`,
         "Content-Type": "application/json",
       },
     });
@@ -45,7 +41,6 @@ exports.callDocumentAutomationService = async (documentUrl, userId) => {
     throw error; // Rethrow for handling in calling function
   }
 };
-
 
 
 exports.generateExcel = async (filePath, extractedData) => {
@@ -90,41 +85,93 @@ exports.generateExcel = async (filePath, extractedData) => {
 };
 
 
-exports.getExcelTemplateStructure = async (filePath) => {
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.readFile(filePath);
 
-  let structure = {};
+// USING GOOGLE OCR
+
+
+// exports.getExcelTemplateStructure = async (filePath) => {
+//   const workbook = new ExcelJS.Workbook();
+//   await workbook.xlsx.readFile(filePath);
+
+//   let structure = {};
   
-  workbook.eachSheet((sheet) => {
-    let sheetData = {};
-    sheet.eachRow((row, rowNumber) => {
-      row.eachCell((cell, colNumber) => {
-        const cellValue = cell.value?.toString().trim();
-        if (cellValue) {
-          sheetData[cellValue] = "";
-        }
-      });
-    });
-    structure[sheet.name] = sheetData;
-  });
+//   workbook.eachSheet((sheet) => {
+//     let sheetData = {};
+//     sheet.eachRow((row, rowNumber) => {
+//       row.eachCell((cell, colNumber) => {
+//         const cellValue = cell.value?.toString().trim();
+//         if (cellValue) {
+//           sheetData[cellValue] = "";
+//         }
+//       });
+//     });
+//     structure[sheet.name] = sheetData;
+//   });
 
-  return structure;
-};
+//   return structure;
+// };
 
 
 
 
 // Initialize Google Cloud Vision client
-const client = new vision.ImageAnnotatorClient();
+// const client = new vision.ImageAnnotatorClient();
 
-exports.extractTextFromPDF = async (pdfUrl) => {
-  try {
-    const [result] = await client.documentTextDetection(pdfUrl);
-    const fullText = result.fullTextAnnotation?.text || "";
-    return fullText;
-  } catch (error) {
-    console.error("Google OCR Error:", error);
-    throw new Error("Error extracting text from document.");
-  }
-};
+// exports.extractTextFromPDF = async (pdfUrl) => {
+//   try {
+//     const [result] = await client.documentTextDetection(pdfUrl);
+//     const fullText = result.fullTextAnnotation?.text || "";
+//     return fullText;
+//   } catch (error) {
+//     console.error("Google OCR Error:", error);
+//     throw new Error("Error extracting text from document.");
+//   }
+// };
+
+
+
+// exports.extractTextFromPDF = async (pdfFilePath) => {
+//   try {
+//     const authClient = await getGoogleAuthClient();
+
+//     // Initialize Google Cloud Vision client with Workload Identity auth
+//     const client = new vision.ImageAnnotatorClient({ auth: authClient });
+
+//     // Read the PDF and convert to Base64
+//     const pdfBuffer = fs.readFileSync(pdfFilePath);
+//     const pdfBase64 = pdfBuffer.toString('base64');
+
+    
+//     console.log('client: ', client)
+
+//     // Perform OCR using asyncBatchAnnotateFiles (for PDFs with images)
+//     const [operation] = await client.asyncBatchAnnotateFiles({
+//       requests: [
+//         {
+//           inputConfig: {
+//             mimeType: 'application/pdf',  // ✅ Must be PDF
+//             content: pdfBase64,  // ✅ Convert PDF to Base64
+//           },
+//           features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],  // ✅ Extract text from images
+//         },
+//       ],
+//     });
+
+    
+//     console.log('operation: ', operation)
+//     console.log("OCR Processing started. Waiting for results...");
+//     const [response] = await operation.promise(); // Wait for OCR to complete
+
+//     console.log('response: ', response)
+
+//     // ✅ Extract all text from the response
+//     const fullText = response.responses
+//       .map(res => res.fullTextAnnotation?.text || "")
+//       .join("\n");
+
+//     return fullText;  // Return extracted text
+//   } catch (error) {
+//     console.error("Google OCR Error:", error);
+//     throw new Error("Error extracting text from document.");
+//   }
+// };

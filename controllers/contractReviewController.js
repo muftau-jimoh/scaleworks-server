@@ -13,7 +13,7 @@ exports.reviewContract = async (req, res) => {
 
   try {
     files = req.files; // Assign inside try
-    if (!files || files.length === 0) {
+    if (!files || files?.length === 0) {
       return res.status(400).json({ error: "At least one file is required" });
     }
 
@@ -92,7 +92,7 @@ exports.reviewContract = async (req, res) => {
     );
     res.end();
   } finally {
-    if (files.length > 0) {
+    if (files?.length > 0) {
       await Promise.all(files.map((file) => unlinkAsync(file.path)));
       console.log("🗑️ All uploaded files deleted successfully.");
     }

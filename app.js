@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 
+const multer = require("multer");
 const userRoutes = require('./routes/userRoutes.js');
 const legalResearchRoutes = require("./routes/legalResearchRoutes.js");
 const eDiscoveryRoutes = require("./routes/eDiscoveryRoutes.js");
@@ -36,9 +37,12 @@ app.use(
     })
 );
 
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+
+const upload = multer(); // This ensures multer is initialized
 
 // Routes
 app.use('/api/user', userRoutes);

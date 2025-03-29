@@ -82,8 +82,11 @@ async function uploadToKnowledgeBase(req, res) {
   let files = [];
 
   try {
-    const {id: userId, user_name: username} = req.user;
+    // const {id: userId, user_name: username} = req.user;
+    const userId = 'b4373fa8-d251-4b24-be57-863c82de11ba'
+    const username = 'Muftau';
     files = req.files;
+    
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: "At least one file is required" });
@@ -120,6 +123,7 @@ async function uploadToKnowledgeBase(req, res) {
       }
     }
 
+
     // Upload to Pinecone if there are valid chunks
     if (allChunks.length > 0) {
       const uploadRes = await uploadToPinecone(username, allChunks);
@@ -147,10 +151,12 @@ async function uploadToKnowledgeBase(req, res) {
     const existingFiles = data?.knowledgeBase || [];
     const updatedFiles = [...new Set([...existingFiles, ...uploadedFileNames])]; // Avoid duplicates
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ knowledgeBase: updatedFiles })
-      .eq("id", userId);
+    const { data: updatedUser, error: updateError } = await supabase
+    .from("profiles")
+    .update({ knowledgeBase: updatedFiles })
+    .eq("id", userId)
+    .select("*") // Fetch the updated user data
+    .single(); // Ensure we return only one recor
 
     if (updateError) {
       console.error("❌ Supabase Update Error:", updateError);
@@ -158,7 +164,7 @@ async function uploadToKnowledgeBase(req, res) {
     }
 
     return res.status(200).json({
-      message: "Files uploaded and stored in knowledgeBase.",
+      updatedUser: updatedUser,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
