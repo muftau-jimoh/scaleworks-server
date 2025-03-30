@@ -6,13 +6,13 @@ exports.isAuthenticatedUser = async (req, res, next) => {
         const token = req.cookies?.access_token;
 
         if (!token) {
-            return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Access denied. No token provided.' });
+            return res.status(401).json({ error: 'UNAUTHORIZED - Login', message: 'Access denied. No token provided.' });
         }
 
         const { data, error } = await supabase.auth.getUser(token);
 
         if (error || !data.user) {
-            return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or expired token.' });
+            return res.status(401).json({ error: 'UNAUTHORIZED - Login', message: 'Invalid or expired token.' });
         }
 
         req.user = await getUserByAuthId(data?.user?.id);

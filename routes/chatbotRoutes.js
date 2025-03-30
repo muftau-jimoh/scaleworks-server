@@ -5,6 +5,6 @@ const {upload, validateFileUpload} = require("../middlewares/uploadFile");
 const router = express.Router();
 
 router.get("/", isAuthenticatedUser, chatWithBot);
-router.post("/upload-knowledge", upload.array("files"), validateFileUpload, uploadToKnowledgeBase);
+router.post("/upload-knowledge", isAuthenticatedUser, upload.array("files"), validateFileUpload, uploadToKnowledgeBase);
 
 module.exports = router;

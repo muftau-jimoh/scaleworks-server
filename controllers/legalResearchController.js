@@ -1,5 +1,7 @@
-const { callLegalAssistant, callGitHubLegalAssistant } = require("../services/legalAssistantService");
-
+const {
+  callLegalAssistant,
+  callGitHubLegalAssistant,
+} = require("../services/legalAssistantService");
 
 /**
  * Fetches case law from CourtListener with authentication and summarizes it using GPT-4.
@@ -21,12 +23,12 @@ exports.performLegalResearch = async (req, res) => {
     let streamClosed = false;
 
     // Call GPT-4 with case law context
-    await callLegalAssistant(
+    await callGitHubLegalAssistant(
       query,
       (data) => {
         if (streamClosed) return;
         if (data) {
-          console.log('data: ', data)
+          console.log("data: ", data);
           res.write(
             `data: ${JSON.stringify({
               type: "SUCCESS",
@@ -50,13 +52,15 @@ exports.performLegalResearch = async (req, res) => {
     );
 
     if (!streamClosed) {
-      res.write(
-        `data: ${JSON.stringify({
-          type: "END",
-          message: "Streaming complete",
-        })}\n\n`
-      );
-      setTimeout(() => res.end(), 500);
+      setTimeout(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "END",
+            message: "Streaming complete",
+          })}\n\n`
+        );
+        res.end();
+      }, 1000);
     }
   } catch (error) {
     console.error("Streaming Error:", error);

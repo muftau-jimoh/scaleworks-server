@@ -55,16 +55,17 @@ async function chatWithBot(req, res) {
       }
     );
 
+    
     if (!streamClosed) {
-      res.write(
-        `data: ${JSON.stringify({
-          type: "END",
-          message: "Streaming complete",
-        })}\n\n`
-      );
       setTimeout(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "END",
+            message: "Streaming complete",
+          })}\n\n`
+        );
         res.end();
-      }, 500);
+      }, 1000);
     }
   } catch (error) {
     console.error("Streaming Error:", error);
@@ -82,9 +83,7 @@ async function uploadToKnowledgeBase(req, res) {
   let files = [];
 
   try {
-    // const {id: userId, user_name: username} = req.user;
-    const userId = 'b4373fa8-d251-4b24-be57-863c82de11ba'
-    const username = 'Muftau';
+    const {id: userId, user_name: username} = req.user;
     files = req.files;
     
 
@@ -156,7 +155,7 @@ async function uploadToKnowledgeBase(req, res) {
     .update({ knowledgeBase: updatedFiles })
     .eq("id", userId)
     .select("*") // Fetch the updated user data
-    .single(); // Ensure we return only one recor
+    .maybeSingle(); // Prevents error if no rows are updated
 
     if (updateError) {
       console.error("❌ Supabase Update Error:", updateError);

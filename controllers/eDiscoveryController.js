@@ -86,11 +86,17 @@ exports.performEDiscovery = async (req, res) => {
     }
 
     if (!streamClosed) {
-      res.write(`data: ${JSON.stringify({ type: "END", message: "Streaming complete" })}\n\n`);
-      streamClosed = true;
-      setTimeout(() => res.end(), 500);
+      setTimeout(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "END",
+            message: "Streaming complete",
+          })}\n\n`
+        );
+        streamClosed = true;
+        res.end();
+      }, 1000);
     }
-
   } catch (error) {
     console.error("Streaming Error:", error);
     res.write(`data: ${JSON.stringify({ type: "SERVER_ERROR", message: error.message })}\n\n`);

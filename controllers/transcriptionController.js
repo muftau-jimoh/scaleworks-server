@@ -42,13 +42,17 @@ async function transcribeAudio(req, res) {
         return; 
       }
     );
-
-    // Now this will only execute **after** transcription is complete
+    
     if (!streamClosed) {
-      res.write(`data: ${JSON.stringify({ type: "END", message: "Streaming complete" })}\n\n`);
       setTimeout(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "END",
+            message: "Streaming complete",
+          })}\n\n`
+        );
         res.end();
-      }, 500);
+      }, 1000);
     }
   } catch (error) {
     console.error("Streaming Error:", error);
