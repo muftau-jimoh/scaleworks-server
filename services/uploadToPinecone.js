@@ -1,5 +1,5 @@
 const { Pinecone } = require("@pinecone-database/pinecone");
-const { getEmbeddingFromGithub } = require("../utils/getEmbedding");
+const { getEmbeddingFromOpenAI } = require("../utils/getEmbedding");
 
 require("dotenv").config();
 
@@ -29,7 +29,7 @@ async function uploadToPinecone(username, chunks) {
     const vectors = await Promise.all(
       validChunks.map(async (chunk, index) => {
         try {
-          const embedding = await getEmbeddingFromGithub(chunk);
+          const embedding = await getEmbeddingFromOpenAI(chunk);
           if (!embedding) throw new Error("Embedding generation failed.");
 
           return {
