@@ -81,6 +81,7 @@ exports.login = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
         maxAge: data.session.expires_in * 10000, // Set cookie expiration time
+        sameSite: "None",  // 👈 Add this to allow cross-site cookies
     });
 
     
