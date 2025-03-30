@@ -79,7 +79,7 @@ exports.login = async (req, res) => {
     // Save the access_token in a secure HTTP-only cookie
     res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        secure: true, 
         maxAge: data.session.expires_in * 10000, // Set cookie expiration time
         sameSite: "None",  // 👈 Add this to allow cross-site cookies
     });
