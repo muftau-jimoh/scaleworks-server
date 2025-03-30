@@ -1,4 +1,4 @@
-const { getEmbeddingFromGithub } = require("./getEmbedding");
+const { getEmbeddingFromOpenAI } = require("./getEmbedding");
 require("dotenv").config();
 const { Pinecone } = require("@pinecone-database/pinecone");
 
@@ -13,7 +13,6 @@ const index = pc.index(pineconeIndexNameTwo);
  * Stores document chunks temporarily in Pinecone
  */
 async function storeChunksInPinecone(sessionId, chunks) {
-    // console.log(`🚀 Processing ${chunks.length} chunks for session: ${sessionId}`);
   
     // Process each chunk safely
     const vectors = await Promise.allSettled(
@@ -25,7 +24,7 @@ async function storeChunksInPinecone(sessionId, chunks) {
           }
   
           // Replace with actual embedding function (e.g., OpenAI)
-          const embedding = await getEmbeddingFromGithub(chunk);
+          const embedding = await getEmbeddingFromOpenAI(chunk);
           if (!embedding) throw new Error("Embedding generation failed.");
   
           const vectorId = `${sessionId}-chunk-${i}`;

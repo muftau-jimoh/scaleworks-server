@@ -1,4 +1,4 @@
-const { getEmbeddingFromGithub } = require("./getEmbedding");
+const { getEmbeddingFromOpenAI } = require("./getEmbedding");
 require("dotenv").config();
 const { Pinecone } = require("@pinecone-database/pinecone");
 
@@ -13,7 +13,7 @@ const index = pc.index(pineconeIndexNameTwo);
  * Finds relevant chunks for the given question
  */
 async function findRelevantChunks(sessionId, query) {
-  const queryEmbedding = await getEmbeddingFromGithub(query);
+  const queryEmbedding = await getEmbeddingFromOpenAI(query);
 
   const results = await index.query({
     vector: queryEmbedding,

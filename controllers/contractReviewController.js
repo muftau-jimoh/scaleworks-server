@@ -1,7 +1,6 @@
 const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
 const {
   callContractReviewService,
-  callGithubModel,
 } = require("../services/contractReviewService");
 
 const fs = require("fs");
@@ -42,7 +41,7 @@ exports.reviewContract = async (req, res) => {
 
     // If at least one file succeeded, process it
     if (successfulTexts.length > 0) {
-      await callGithubModel(
+      await callContractReviewService(
         successfulTexts.join("\n\n"), // Combine extracted texts
         (data) => {
           if (streamClosed) return;

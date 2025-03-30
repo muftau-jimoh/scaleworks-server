@@ -1,6 +1,5 @@
 const {
   callLegalAssistant,
-  callGitHubLegalAssistant,
 } = require("../services/legalAssistantService");
 
 /**
@@ -23,12 +22,11 @@ exports.performLegalResearch = async (req, res) => {
     let streamClosed = false;
 
     // Call GPT-4 with case law context
-    await callGitHubLegalAssistant(
+    await callLegalAssistant(
       query,
       (data) => {
         if (streamClosed) return;
         if (data) {
-          console.log("data: ", data);
           res.write(
             `data: ${JSON.stringify({
               type: "SUCCESS",

@@ -44,8 +44,6 @@ exports.performEDiscovery = async (req, res) => {
     const vectorIds = await storeChunksInPinecone(sessionId, chunks);
     if (!vectorIds) throw new Error("Failed to upload file chunks to PineCone");
 
-    // console.log('vectorIds:', vectorIds);
-
     // 🔹 SSE response setup
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");

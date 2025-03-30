@@ -8,7 +8,7 @@ const supabase = require("../config/supabaseClient");
 
 
 async function chatWithBot(req, res) {
-  const username = req.user?.user_name;
+  const organization_name = req.user?.organization_name;
   const { query } = req.body; // Get uploaded audio file
 
   // Check if file is uploaded
@@ -16,8 +16,8 @@ async function chatWithBot(req, res) {
     return res.status(400).json({ error: "A query is required." });
   }
   
-  if (!username) {
-    return res.status(400).json({ error: "Username is required." });
+  if (!organization_name) {
+    return res.status(400).json({ error: "Organization name is required." });
   }
 
   try {
@@ -30,7 +30,7 @@ async function chatWithBot(req, res) {
     let streamClosed = false; // Track stream status
 
     await queryChatBotService(
-      username,
+      organization_name,
       query,
       (data) => {
         if (!streamClosed && data) {
@@ -83,7 +83,7 @@ async function uploadToKnowledgeBase(req, res) {
   let files = [];
 
   try {
-    const {id: userId, user_name: username} = req.user;
+    const {id: userId, organization_name} = req.user;
     files = req.files;
     
 
@@ -91,8 +91,8 @@ async function uploadToKnowledgeBase(req, res) {
       return res.status(400).json({ error: "At least one file is required" });
     }
 
-    if (!username) {
-      return res.status(400).json({ error: "Username is required." });
+    if (!organization_name) {
+      return res.status(400).json({ error: "Organization name is required." });
     }
 
     let allChunks = [];
@@ -125,7 +125,7 @@ async function uploadToKnowledgeBase(req, res) {
 
     // Upload to Pinecone if there are valid chunks
     if (allChunks.length > 0) {
-      const uploadRes = await uploadToPinecone(username, allChunks);
+      const uploadRes = await uploadToPinecone(organization_name, allChunks);
       if (uploadRes?.error) {
         console.error("❌ Pinecone Upload Error:", uploadRes?.error);
         return res.status(500).json({

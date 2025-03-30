@@ -6,7 +6,6 @@ const {
   generateExcel,
 } = require("../services/documentService"); // Function to fill the template
 const { uploadToCloudinary } = require("../utils/fileUpload");
-// const { extractedData } = require("../utils/DSConstants");
 
 exports.automateDocument = async (req, res) => {
   let file;
