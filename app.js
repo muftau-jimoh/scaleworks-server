@@ -22,7 +22,10 @@ dotenv.config(); // Load environment variables
 
 
 // Middleware
-const allowedOrigins = ["https://scalesworks.vercel.app/"];
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://scalesworks.vercel.app"
+];
 
 app.use(
     cors({
@@ -34,12 +37,17 @@ app.use(
             }
         },
         credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
 
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+app.options("*", cors()); // Handle preflight requests
+
 
 
 const upload = multer(); // This ensures multer is initialized
