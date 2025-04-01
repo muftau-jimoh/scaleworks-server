@@ -76,18 +76,14 @@ exports.login = async (req, res) => {
         return res.status(400).json({ error: error.message });
     }
 
-    // Save the access_token in a secure HTTP-only cookie
-    res.cookie('access_token', data.session.access_token, {
-        httpOnly: true,
-        secure: true, 
-        maxAge: data.session.expires_in * 10000, // Set cookie expiration time
-        sameSite: "None",  // 👈 Add this to allow cross-site cookies
+    let user = await getUserByAuthId(data?.user?.id);
+
+    // Send the access_token in the response body instead of a cookie
+    return res.status(200).json({ 
+        message: 'Login successful.', 
+        user, 
+        access_token: data.session.access_token // Send token to frontend
     });
-
-    
-    let user = await getUserByAuthId(data?.user?.id)
-
-    return res.status(200).json({ message: 'Login successful.', user });
 };
 
 
@@ -117,6 +113,31 @@ exports.logout = async (req, res) => {
         return res.status(500).json({ message: "Internal server error.", error: err });
     }
 };
+
+exports.logout = async (req, res) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(400).json({ error: "No token provided." });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        // Call Supabase to sign out the user
+        const { error } = await supabase.auth.signOut(token);
+
+        if (error) {
+            return res.status(500).json({ error: "Failed to logout. Try again." });
+        }
+
+        return res.status(200).json({ message: "Logout successful." });
+    } catch (err) {
+        console.log('LogOut error - ', err)
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
+
 
 
 // Password Reset Request
