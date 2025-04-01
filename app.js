@@ -11,6 +11,7 @@ const contractReviewRoutes = require("./routes/contractReviewRoutes.js");
 const transcriptionRoutes = require("./routes/transcriptionRoutes.js");
 const chatbotRoutes = require("./routes/chatbotRoutes.js");
 const documentAutomationRoutes = require("./routes/documentAutomationRoutes.js");
+const waitlistRoutes = require("./routes/waitlistRoutes.js");
 
 
 const cookieParser = require('cookie-parser');
@@ -24,7 +25,8 @@ dotenv.config(); // Load environment variables
 // Middleware
 const allowedOrigins = [
     "http://localhost:3000",
-    "https://scalesworks.vercel.app"
+    "https://scalesworks.vercel.app",
+    "https://scaleworks.ai/"
 ];
 
 app.use(
@@ -36,6 +38,7 @@ app.use(
                 callback(new Error("Not allowed by CORS"));
             }
         },
+        // origin: "*",
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
@@ -61,6 +64,9 @@ app.use("/api/transcription", transcriptionRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/contract-review", contractReviewRoutes);
 app.use("/api/document-automation", documentAutomationRoutes);
+
+// landing page routes
+app.use("/api/waitlist", waitlistRoutes);
 
 
 // trainNlpModel();
