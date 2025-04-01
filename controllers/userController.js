@@ -157,3 +157,29 @@ exports.resetPassword = async (req, res) => {
     return res.status(200).json({ message: 'Password reset email sent.' });
 };
 
+
+// fetch user
+exports.getUser = async (req, res) => {
+    const authHeader = req.headers.authorization;
+  
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized: No token provided" });
+    }
+  
+    const token = authHeader.split(" ")[1];
+  
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+  
+      if (error || !data.user) {
+        return res.status(401).json({ error: "Unauthorized: Invalid token" });
+      }
+  
+      const user = await getUserByAuthId(data?.user?.id);
+  
+      return res.status(200).json({ user })
+    } catch (err) {
+      // console.error('Authentication error:', err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }

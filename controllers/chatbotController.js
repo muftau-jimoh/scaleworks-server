@@ -78,6 +78,7 @@ async function chatWithBot(req, res) {
   }
 }
 
+
 async function uploadToKnowledgeBase(req, res) {
   let files = [];
 
@@ -127,6 +128,7 @@ async function uploadToKnowledgeBase(req, res) {
       }
     }
 
+
     // Update user's knowledgeBase in Supabase
     const { data, error } = await supabase
       .from("profiles")
@@ -141,14 +143,15 @@ async function uploadToKnowledgeBase(req, res) {
     }
 
     const existingFiles = data?.knowledgeBase || [];
-    const updatedFiles = [...new Set([...existingFiles, ...uploadedFileNames])]; // Avoid duplicates
+
+    const updatedFiles = [...new Set([...existingFiles, ...uploadedFileNames])].map(file => String(file));
 
     const { data: updatedUser, error: updateError } = await supabase
       .from("profiles")
       .update({ knowledgeBase: updatedFiles })
       .eq("id", userId)
       .select("*") // Fetch the updated user data
-      .maybeSingle(); // Prevents error if no rows are updated
+
 
     if (updateError) {
       console.error("❌ Supabase Update Error:", updateError);
