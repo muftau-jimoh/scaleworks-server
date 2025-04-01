@@ -1,11 +1,9 @@
 const callEDiscovery = require("../services/eDiscoveryService");
 const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
 const { v4: uuidv4 } = require("uuid");
-const fs = require("fs");
-const util = require("util");
 const { splitEDiscoveryTextIntoChunks } = require('../utils/splitTextIntoChunks')
 const storeChunksInPinecone = require("../utils/storeChunksInPinecone");
-const unlinkAsync = util.promisify(fs.unlink);
+const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 
 exports.performEDiscovery = async (req, res) => {
   let files = [];
@@ -101,9 +99,6 @@ exports.performEDiscovery = async (req, res) => {
     res.end();
   } finally {
     // Ensure all uploaded files are deleted
-    if (files.length > 0) {
-      await Promise.allSettled(files.map(file => unlinkAsync(file.path)));
-      console.log("🗑️ All uploaded files deleted successfully.");
-    }
+    deleteFilesSafely(files)
   }
 };

@@ -2,10 +2,7 @@ const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
 const {
   callContractReviewService,
 } = require("../services/contractReviewService");
-
-const fs = require("fs");
-const util = require("util");
-const unlinkAsync = util.promisify(fs.unlink);
+const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 
 exports.reviewContract = async (req, res) => {
   let files = []; // Declare outside try block
@@ -94,10 +91,8 @@ exports.reviewContract = async (req, res) => {
     );
     res.end();
   } finally {
-    if (files?.length > 0) {
-      await Promise.all(files.map((file) => unlinkAsync(file.path)));
-      console.log("🗑️ All uploaded files deleted successfully.");
-    }
+    // Ensure all uploaded files are deleted
+    deleteFilesSafely(files)
   }
 };
 

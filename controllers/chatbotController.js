@@ -2,9 +2,8 @@ const queryChatBotService = require("../services/chatbotService");
 const chunkText = require("../services/chunkText");
 const uploadToPinecone = require("../services/uploadToPinecone");
 const { extractTextFromFile } = require("../utils/extractTextFromFiles");
-const fs = require("fs-extra");
-
 const supabase = require("../config/supabaseClient");
+const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 
 
 async function chatWithBot(req, res) {
@@ -83,9 +82,8 @@ async function uploadToKnowledgeBase(req, res) {
   let files = [];
 
   try {
-    const {id: userId, organization_name} = req.user;
+    const { id: userId, organization_name } = req.user;
     files = req.files;
-    
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: "At least one file is required" });
@@ -101,7 +99,6 @@ async function uploadToKnowledgeBase(req, res) {
 
     for (const file of files) {
       try {
-
         const extractedText = await extractTextFromFile(file);
         if (!extractedText) {
           errors.push(`Failed to extract text from ${file.originalname}`);
@@ -109,19 +106,15 @@ async function uploadToKnowledgeBase(req, res) {
         }
 
         uploadedFileNames.push(file.originalname);
-        
+
         // Split text into chunks
         const chunks = chunkText(extractedText, 500);
         allChunks.push(...chunks);
       } catch (err) {
         console.error(`Error processing ${file.originalname}:`, err);
         errors.push(`Error processing ${file.originalname}: ${err.message}`);
-      } finally {
-        // Ensure file is deleted after processing
-        await fs.remove(file.path);
       }
     }
-
 
     // Upload to Pinecone if there are valid chunks
     if (allChunks.length > 0) {
@@ -151,11 +144,11 @@ async function uploadToKnowledgeBase(req, res) {
     const updatedFiles = [...new Set([...existingFiles, ...uploadedFileNames])]; // Avoid duplicates
 
     const { data: updatedUser, error: updateError } = await supabase
-    .from("profiles")
-    .update({ knowledgeBase: updatedFiles })
-    .eq("id", userId)
-    .select("*") // Fetch the updated user data
-    .maybeSingle(); // Prevents error if no rows are updated
+      .from("profiles")
+      .update({ knowledgeBase: updatedFiles })
+      .eq("id", userId)
+      .select("*") // Fetch the updated user data
+      .maybeSingle(); // Prevents error if no rows are updated
 
     if (updateError) {
       console.error("❌ Supabase Update Error:", updateError);
@@ -169,6 +162,9 @@ async function uploadToKnowledgeBase(req, res) {
   } catch (error) {
     console.error("Upload Error:", error);
     res.status(500).json({ error: "Internal Server Error." });
+  } finally {
+    // Ensure all uploaded files are deleted
+    deleteFilesSafely(files)
   }
 }
 
