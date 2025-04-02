@@ -13,6 +13,14 @@ exports.reviewContract = async (req, res) => {
       return res.status(400).json({ error: "At least one file is required" });
     }
 
+    // ✅ Check if all files exist
+    for (const file of files) {
+      const filePath = path.join(__dirname, "../uploads/file", file.filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: `File not found: ${file.filename}` });
+      }
+    }
+
     // Extract text from contracts
     const extractionResults = await extractTextFromFiles(files);
 

@@ -1,12 +1,19 @@
 const multer = require("multer");
 const path = require("path");
 
+// Ensure upload directory exists
+const uploadPath = path.join(__dirname, '../uploads/file');
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true }); // Create the directory if it doesn't exist
+}
+
+
 // Allowed file types
 const allowedFileTypes = [".pdf", ".doc", ".docx", ".txt", ".xlsx", ".csv", ".md"];
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/file/"); // Temporary storage before Cloudinary upload
+        cb(null, uploadPath); // Temporary storage before Cloudinary upload
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);

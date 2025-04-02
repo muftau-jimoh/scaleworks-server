@@ -11,13 +11,25 @@ exports.automateDocument = async (req, res) => {
   let file;
 
   try {
-    // const userId = req.user?.id;
-    const userId = "075f4aa9-35f1-4d9b-adbe-4f62eb0121d8";
+    const userId = req.user?.id;
     file = req.file; // Get uploaded file,
 
     if (!file) {
       return res.status(400).json({ error: "Your PDF Form is required" });
     }
+
+    if (!userId) {
+      return res.status(400).json({ error: "Auth user is required" });
+    }
+
+    const filePath = path.join(__dirname, "../uploads/file", file.filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res
+        .status(404)
+        .json({ error: `File not found: ${file.filename}` });
+    }
+    
 
     // ✅ Step 1: Upload to Cloudinary
     const folder = `scaleworks/${userId}/documentAutomation/pdfs`;

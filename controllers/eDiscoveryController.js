@@ -12,12 +12,23 @@ exports.performEDiscovery = async (req, res) => {
     const { query } = req.body;
     const userId = req.user?.id;
     files = req.files;
+    
 
     if (!query || !files || files.length === 0) {
       return res
         .status(400)
         .json({ error: "Query and at least one file are required" });
     }
+
+
+    // ✅ Check if all files exist
+    for (const file of files) {
+      const filePath = path.join(__dirname, "../uploads/file", file.filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: `File not found: ${file.filename}` });
+      }
+    }
+
 
     const sessionId = uuidv4();
 

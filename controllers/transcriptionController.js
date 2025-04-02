@@ -17,8 +17,6 @@ async function transcribeAudio(req, res) {
   try {
     const filePath = path.join(__dirname, "../uploads/audio", audio.filename); 
     
-    console.log('reach transcription controller')
-    
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: `Audio file not found: ${audio.filename}` });
     }
