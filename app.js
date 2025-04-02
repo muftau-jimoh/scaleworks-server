@@ -29,21 +29,24 @@ const allowedOrigins = [
     "https://scaleworks.ai/"
 ];
 
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true); // Use `true` instead of `origin`
-            } else {
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
-        // origin: "*",
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-    })
-);
+// app.use(
+//     cors({
+//         origin: (origin, callback) => {
+//             if (!origin || allowedOrigins.includes(origin)) {
+//                 callback(null, true); // Use `true` instead of `origin`
+//             } else {
+//                 callback(new Error("Not allowed by CORS"));
+//             }
+//         },
+//         // origin: "*",
+//         credentials: true,
+//         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//         allowedHeaders: ["Content-Type", "Authorization"],
+//     })
+// );
+
+app.use(cors({ origin: "*", credentials: true }));
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
