@@ -12,7 +12,7 @@ const index = pc.index(pineconeIndexNameTwo);
 /** 
  * Finds relevant chunks for the given question
  */
-async function findRelevantChunks(sessionId, query) {
+async function searchPinecone(sessionId, query) {
   const queryEmbedding = await getEmbeddingFromOpenAI(query);
 
   const results = await index.query({
@@ -24,6 +24,22 @@ async function findRelevantChunks(sessionId, query) {
 
   return results.matches.map((match) => match.metadata.text);
 }
+
+async function findRelevantChunks(sessionId, query, retries = 5, delay = 2000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+      const results = await searchPinecone(sessionId, query); // Your function that queries Pinecone
+      
+      if (results.length > 0) {
+          return results; // Return relevant chunks if found
+      }
+
+      // console.log(`🔄 Retry ${attempt}/${retries} - No relevant content found. Waiting...`);
+      await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retrying
+  }
+
+  return []; // Return empty array if no results after retries
+}
+
 
 
 

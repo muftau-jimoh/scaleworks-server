@@ -23,12 +23,6 @@ dotenv.config(); // Load environment variables
 
 
 // Middleware
-const allowedOrigins = [
-    "http://localhost:3000",
-    "https://scalesworks.vercel.app",
-    "https://scaleworks.ai"
-];
-
 app.use(
     cors({
       origin: ["http://localhost:3000", "https://scalesworks.vercel.app", "https://scaleworks.ai"], // Restrict to known origins

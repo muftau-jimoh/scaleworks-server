@@ -12,7 +12,6 @@ exports.performEDiscovery = async (req, res) => {
 
   try {
     const { query } = req.body;
-    const userId = req.user?.id;
     files = req.files;
     
 
