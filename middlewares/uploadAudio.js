@@ -1,10 +1,17 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+// Ensure upload directory exists
+const uploadPath = path.join(__dirname, '../uploads/audio');
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true }); // Create the directory if it doesn't exist
+}
 
 // Set up storage engine
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/audio/"); // Files will be stored in 'uploads/audio'
+    cb(null, uploadPath); // Files will be stored in 'uploads/audio'
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
