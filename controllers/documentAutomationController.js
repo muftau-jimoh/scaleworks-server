@@ -53,14 +53,16 @@ exports.automateDocument = async (req, res) => {
 
     // ✅ Step 3: Copy Excel template
     const EXCEL_TEMPLATE_PATH = path.join(
-      __dirname,
-      "../assets/template/schedule_template.xlsx"
+      process.cwd(),
+      "assets/template/schedule_template.xlsx"
     );
+    
 
-    const GENERATED_EXCEL_PATH = path.join(__dirname, `../assets/generated/`);
+    const GENERATED_EXCEL_PATH = path.join(process.cwd(), "assets/generated/");
     if (!fs.existsSync(GENERATED_EXCEL_PATH)) {
       fs.mkdirSync(GENERATED_EXCEL_PATH, { recursive: true }); // Create user folder if it doesn't exist
     }
+
 
     // Create a unique copy for the request
     const newFileName = `schedule_${uuidv4()}-${userId}.xlsx`;
