@@ -45,7 +45,14 @@ const allowedOrigins = [
 //     })
 // );
 
-app.use(cors({ origin: "*", credentials: true }));
+app.use(
+    cors({
+      origin: "*", // Allow all origins
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+  
 
 
 app.use(express.urlencoded({ extended: true }));
