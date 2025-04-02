@@ -5,6 +5,7 @@ const { splitEDiscoveryTextIntoChunks } = require('../utils/splitTextIntoChunks'
 const storeChunksInPinecone = require("../utils/storeChunksInPinecone");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 const fs = require("fs");
+const path = require("path");
 
 exports.performEDiscovery = async (req, res) => {
   let files = [];

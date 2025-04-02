@@ -4,6 +4,7 @@ const {
 } = require("../services/contractReviewService");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 const fs = require("fs");
+const path = require("path");
 
 exports.reviewContract = async (req, res) => {
   let files = []; // Declare outside try block
