@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const { splitEDiscoveryTextIntoChunks } = require('../utils/splitTextIntoChunks')
 const storeChunksInPinecone = require("../utils/storeChunksInPinecone");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
+const fs = require("fs");
 
 exports.performEDiscovery = async (req, res) => {
   let files = [];
