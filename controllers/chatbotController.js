@@ -4,6 +4,8 @@ const uploadToPinecone = require("../services/uploadToPinecone");
 const { extractTextFromFile } = require("../utils/extractTextFromFiles");
 const supabase = require("../config/supabaseClient");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
+const fs = require("fs");
+const path = require("path");
 
 
 async function chatWithBot(req, res) {
@@ -79,7 +81,7 @@ async function chatWithBot(req, res) {
 }
 
 
-async function uploadToKnowledgeBase(req, res) {
+async function uploadToKnowledgeBase(req, res) { 
   let files = [];
 
   try {
@@ -92,6 +94,16 @@ async function uploadToKnowledgeBase(req, res) {
 
     if (!organization_name) {
       return res.status(400).json({ error: "Organization name is required." });
+    }
+
+    // ✅ Check if all files exist
+    for (const file of files) {
+      const filePath = path.join(__dirname, "../uploads/file", file.filename);
+      if (!fs.existsSync(filePath)) {
+        return res
+          .status(404)
+          .json({ error: `File not found: ${file.filename}` });
+      }
     }
 
     let allChunks = [];
