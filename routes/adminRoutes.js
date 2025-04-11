@@ -10,6 +10,6 @@ const router = express.Router();
 // router.post('/create-record', isAuthenticatedAdmin, createWhitelistBlacklistRecord); // add to whitelisted email list
 router.post('/whitelist-email', isAuthenticatedAdmin, updateWhitelistedEmailList); // add to whitelisted email list
 router.post('/blacklist-email', isAuthenticatedAdmin, updateBlacklistedEmailList); // add to blacklisted email list
-router.post('/fetch-email-list', isAuthenticatedAdmin, getEmailLists); // add to blacklisted email list
+router.get('/fetch-email-list', isAuthenticatedAdmin, getEmailLists); // add to blacklisted email list
 
 module.exports = router;

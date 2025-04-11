@@ -7,13 +7,15 @@ const { getUserByAuthId, validateForm } = require("../utils/getUserByAuthId");
 
 // User Signup
 exports.signup = async (req, res) => {
-// no one should signup with user_name "admin"
-
-
     const { organization_name, email, user_name, password } = req.body;
 
-    const validationError = validateForm({ organization_name, email, user_name, password })
-    
+    // Ensure the user_name is not "admin"
+    if (user_name.toLowerCase() === "admin") {
+        return res.status(400).json({ error: "Username 'admin' is not allowed." });
+    }
+
+    const validationError = validateForm({ organization_name, email, user_name, password });
+
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
@@ -26,7 +28,7 @@ exports.signup = async (req, res) => {
             .eq("email", email)
             .single();
 
-        if (fetchError && fetchError.code !== "PGRST116") { 
+        if (fetchError && fetchError.code !== "PGRST116") {
             // PGRST116: No rows found (safe to ignore)
             return res.status(500).json({ error: "Error checking email existence. Try again later." });
         }

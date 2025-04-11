@@ -59,7 +59,7 @@ exports.updateWhitelistedEmailList = async (req, res) => {
 
     if (updateError) throw updateError;
 
-    return res.status(200).json({ message: "Emails successfully whitelisted.", whitelisted, blacklisted });
+    return res.status(200).json({ message: "Emails successfully whitelisted." });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Server error." });
@@ -98,7 +98,7 @@ exports.updateBlacklistedEmailList = async (req, res) => {
 
     if (updateError) throw updateError;
 
-    return res.status(200).json({ message: "Emails successfully blacklisted.", whitelisted, blacklisted });
+    return res.status(200).json({ message: "Emails successfully blacklisted." });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Server error." });
