@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 
 const multer = require("multer");
+const adminRoutes = require('./routes/adminRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
 const legalResearchRoutes = require("./routes/legalResearchRoutes.js");
 const eDiscoveryRoutes = require("./routes/eDiscoveryRoutes.js");
@@ -52,6 +53,8 @@ app.options("*", cors()); // Handle preflight requests
 const upload = multer(); // This ensures multer is initialized
 
 // Routes
+app.use('/api/admin', adminRoutes);
+
 app.use('/api/user', userRoutes);
 
 app.use("/api/legal-research", legalResearchRoutes);

@@ -7,6 +7,9 @@ const { getUserByAuthId, validateForm } = require("../utils/getUserByAuthId");
 
 // User Signup
 exports.signup = async (req, res) => {
+// no one should signup with user_name "admin"
+
+
     const { organization_name, email, user_name, password } = req.body;
 
     const validationError = validateForm({ organization_name, email, user_name, password })
