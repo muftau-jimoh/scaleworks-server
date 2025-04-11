@@ -104,3 +104,26 @@ exports.updateBlacklistedEmailList = async (req, res) => {
     return res.status(500).json({ error: "Server error." });
   }
 };
+
+
+exports.getEmailLists = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME) 
+      .select("*")
+      .single(); 
+
+    if (error) {
+      console.error("Error fetching email lists:", error);
+      return res.status(500).json({ error: "Failed to fetch email lists." });
+    }
+
+    return res.status(200).json({ 
+      whitelisted: data.whitelisted,
+      blacklisted: data.blacklisted
+    });
+  } catch (err) {
+    console.error("Server error:", err);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};

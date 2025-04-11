@@ -40,7 +40,7 @@ exports.isAuthenticatedAdmin = async (req, res, next) => {
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
-      return res.status(401).json({ error: "Unauthorized: Invalid token" });
+      return res.status(401).json({ error: "Unauthorized: Please login" });
     }
 
     const user = await getUserByAuthId(data?.user?.id);
