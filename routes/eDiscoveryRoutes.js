@@ -1,5 +1,4 @@
 const express = require("express");
-const multer = require("multer");
 const { performEDiscovery } = require("../controllers/eDiscoveryController");
 const { isAuthenticatedUser } = require("../middlewares/authMiddleware");
 const { validateFileUpload, upload } = require("../middlewares/uploadFile");
