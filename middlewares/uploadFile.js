@@ -32,8 +32,16 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Multer middleware
-const upload = multer({ storage, fileFilter });
+
+// Multer instance
+const uploadLogo = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 👈 50MB max file size
+  },
+});
+
 
 // Middleware to handle file validation error
 const validateFileUpload = (req, res, next) => {
@@ -44,4 +52,19 @@ const validateFileUpload = (req, res, next) => {
     next();
 };
 
-module.exports = { upload, validateFileUpload };
+
+// Middleware to catch Multer errors like file size
+const handleFileMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File size exceeds 50MB limit.' });
+    }
+    return res.status(400).json({ error: `Multer error: ${err.message}` });
+  } else if (err) {
+    return res.status(500).json({ error: 'An unexpected error occurred.' });
+  }
+
+  next();
+};
+
+module.exports = { upload, validateFileUpload, handleFileMulterError };
