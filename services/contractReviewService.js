@@ -1,7 +1,6 @@
 require("dotenv").config();
 const OpenAI = require("openai");
 
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -45,9 +44,6 @@ async function callContractReviewService(contractText, onData, onError) {
   }
 }
 
-
-
-
 // Utility function to split text into chunks
 function splitText(text, maxTokens) {
   const words = text.split(" ");
@@ -69,5 +65,60 @@ function splitText(text, maxTokens) {
   return chunks;
 }
 
+/**
+ * Streams response from OpenAI GPT-4o
+ * @param {string} reviewText - review of contract(s)
+ * @param {string} task - user query/task
+ * @param {function} onData - Callback for streaming OpenAI response
+ * @param {function} onError - Callback for handling errors
+ */
+const callContractReviewAssistant = async (
+  reviewText,
+  task,
+  onData,
+  onError
+) => {
+  try {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `
+    You are a highly intelligent AI assistant specialized in reviewing and analyzing contracts and formal documents.
+    Your job is to help users understand, summarize, or assess the contents of one or more provided documents.
+    Base all your responses solely on the content of the document(s) provided.
+    If the user asks for legal insights, obligations, risks, summaries, or other tasks, ensure your answer is accurate, well-structured, and clearly tied to the source material.
+    Avoid speculation or information not grounded in the document.
+          `.trim(),
+        },
+        {
+          role: "user",
+          content: `
+    You are given one or more contract documents for review:
+    
+    \`\`\`
+    ${reviewText}
+    \`\`\`
+    
+    Task:
+    ${task}
+    
+    Please analyze the above documents and perform the task based only on the content provided. Respond clearly and helpfully.
+          `.trim(),
+        },
+      ],
+      stream: true,
+    });
 
-module.exports = { callContractReviewService };
+    for await (const chunk of stream) {
+      if (chunk.choices && chunk.choices[0].delta?.content) {
+        onData(chunk.choices[0]?.delta?.content || "");
+      }
+    }
+  } catch (error) {
+    if (onError) onError(error.message);
+  }
+};
+
+module.exports = { callContractReviewService, callContractReviewAssistant };

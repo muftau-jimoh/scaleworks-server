@@ -1,6 +1,7 @@
 const { extractTextFromFiles } = require("../utils/extractTextFromFiles");
 const {
   callContractReviewService,
+  callContractReviewAssistant,
 } = require("../services/contractReviewService");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 const fs = require("fs");
@@ -106,3 +107,71 @@ exports.reviewContract = async (req, res) => {
   }
 };
 
+
+exports.performContractReviewTask = async (req, res) => {
+  try {
+    const { reviewText, task } = req.body;
+    // const userId = req.user?.id;
+
+    if (!reviewText || !task) {
+      return res.status(400).json({ error: "Incomplete request parameters." });
+    }
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    let streamClosed = false;
+
+    
+    await callContractReviewAssistant(
+      reviewText,
+      task,
+      (data) => {
+        if (streamClosed) return;
+        if (data) {
+          res.write(
+            `data: ${JSON.stringify({
+              type: "SUCCESS",
+              message: data,
+            })}\n\n`
+          );
+        }
+      },
+      (error) => {
+        console.error("Contract Review assistant Error:", error);
+        if (streamClosed) return;
+        res.write(
+          `event: error\ndata: ${JSON.stringify({
+            type: "ERROR",
+            message: error,
+          })}\n\n`
+        );
+        res.end();
+        streamClosed = true;
+      }
+    );
+
+    if (!streamClosed) {
+      setTimeout(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "END",
+            message: "Streaming complete",
+          })}\n\n`
+        );
+        res.end();
+      }, 1000);
+    }
+  } catch (error) {
+    console.error("Streaming Error:", error);
+    res.write(
+      `event: error\ndata: ${JSON.stringify({
+        type: "SERVER_ERROR",
+        message: error.message,
+      })}\n\n`
+    );
+    res.end();
+  }
+};

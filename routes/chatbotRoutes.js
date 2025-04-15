@@ -1,7 +1,7 @@
 const express = require("express");
 const {chatWithBot, uploadToKnowledgeBase} = require(".././controllers/chatbotController");
 const { isAuthenticatedUser } = require("../middlewares/authMiddleware");
-const {upload, validateFileUpload} = require("../middlewares/uploadFile");
+const {upload, validateFileUpload, handleFileMulterError} = require("../middlewares/uploadFile");
 const router = express.Router();
 
 router.get("/", isAuthenticatedUser, chatWithBot);

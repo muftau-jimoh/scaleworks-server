@@ -34,12 +34,23 @@ async function askAI(relevantContext, query, onData, onError) {
             messages: [
               {
                 role: "system",
-                content:
-                  "You are an AI assistant that answers questions based on provided knowledge base context.",
+                content: `
+          You are a 24/7 AI assistant.
+          
+          Your primary role is to assist users by answering questions based on the provided company knowledge base ("Context"). Always prioritize this context if it is relevant to the user’s query.
+          
+          If the context is not related to the question, or not provided, then rely on your general knowledge to assist the user appropriately. 
+          
+          Be helpful, concise, and clear in your responses.
+
+          If you're answering based on the context, make it clear that your answer is based on internal company information.
+
+          If you're answering based on general knowledge, respond naturally but avoid referencing company-specific content.
+                `.trim(),
               },
               {
                 role: "user",
-                content: `Context:\n${context}\n\nUser Query: ${query}`,
+                content: `Context:\n${context || "N/A"}\n\nUser Query: ${query}`,
               },
             ],
             stream: true, // Enable streaming
@@ -96,9 +107,6 @@ async function askAI(relevantContext, query, onData, onError) {
   });
 }
 
-
-
-
 /**
  * Stream response from OpenAI GPT-4o-mini using retrieved context
  * @param {string} query - User's question
@@ -112,7 +120,10 @@ async function queryChatBotService(organization_name, query, onData, onError) {
     }
 
     // Step 1: Fetch relevant context from Pinecone
-    const relevantContext = await fetchRelevantContext(organization_name, query);
+    const relevantContext = await fetchRelevantContext(
+      organization_name,
+      query
+    );
 
     await askAI(relevantContext, query, onData, onError);
   } catch (error) {
@@ -120,16 +131,6 @@ async function queryChatBotService(organization_name, query, onData, onError) {
     onError(error);
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Streams data from GitHub Marketplace AI
@@ -141,49 +142,54 @@ async function queryChatBotService(organization_name, query, onData, onError) {
  */
 
 async function askAIFromGitHub(relevantContext, query, onData, onError) {
-    const context = relevantContext.join("\n\n");
+  const context = relevantContext.join("\n\n");
 
-    const client = new OpenAI({ 
-        baseURL: "https://models.inference.ai.azure.com", 
-        apiKey: process.env.GITHUB_TOKEN 
-    });
+  const client = new OpenAI({
+    baseURL: "https://models.inference.ai.azure.com",
+    apiKey: process.env.GITHUB_TOKEN,
+  });
 
-    return new Promise(async (resolve, reject) => {  // ✅ Ensures streaming fully completes
-        try {
-            const stream = await client.chat.completions.create({
-                messages: [
-                    { role: "system", content: "You are an AI assistant that answers questions based on provided knowledge base context." },
-                    { role: "user", content: `Context:\n${context}\n\nUser Query: ${query}` }
-                ],
-                model: "gpt-4o",
-                stream: true,
-                stream_options: { include_usage: true }
-            });
+  return new Promise(async (resolve, reject) => {
+    // ✅ Ensures streaming fully completes
+    try {
+      const stream = await client.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an AI assistant that answers questions based on provided knowledge base context.",
+          },
+          {
+            role: "user",
+            content: `Context:\n${context}\n\nUser Query: ${query}`,
+          },
+        ],
+        model: "gpt-4o",
+        stream: true,
+        stream_options: { include_usage: true },
+      });
 
-            let usage = null;
+      let usage = null;
 
-            for await (const part of stream) {
-                const text = part.choices[0]?.delta?.content || "";
-                if (text) onData(text);  // ✅ Stream text as it arrives
+      for await (const part of stream) {
+        const text = part.choices[0]?.delta?.content || "";
+        if (text) onData(text); // ✅ Stream text as it arrives
 
-                if (part.usage) usage = part.usage;
-            }
+        if (part.usage) usage = part.usage;
+      }
 
-            if (usage) {
-                // console.log(`Prompt tokens: ${usage.prompt_tokens}`);
-                // console.log(`Completion tokens: ${usage.completion_tokens}`);
-                // console.log(`Total tokens: ${usage.total_tokens}`);
-            }
+      if (usage) {
+        // console.log(`Prompt tokens: ${usage.prompt_tokens}`);
+        // console.log(`Completion tokens: ${usage.completion_tokens}`);
+        // console.log(`Total tokens: ${usage.total_tokens}`);
+      }
 
-            resolve();  // ✅ Ensures function completes successfully
-
-        } catch (error) {
-            onError(error.message);
-            reject(error);  // ✅ Proper error handling
-        }
-    });
+      resolve(); // ✅ Ensures function completes successfully
+    } catch (error) {
+      onError(error.message);
+      reject(error); // ✅ Proper error handling
+    }
+  });
 }
-
-
 
 module.exports = queryChatBotService;

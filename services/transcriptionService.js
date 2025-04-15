@@ -27,7 +27,9 @@ const callTranscriptionService = (filePath, onData, onError) => {
       live.on(LiveTranscriptionEvents.Open, () => {
         console.log("🔊 Connection to Deepgram opened. Streaming audio...");
 
-        const readStream = fs.createReadStream(filePath, { highWaterMark: 4096 });
+        const readStream = fs.createReadStream(filePath, {
+          highWaterMark: 4096,
+        });
 
         readStream.on("data", (chunk) => {
           live.send(chunk);
@@ -53,7 +55,7 @@ const callTranscriptionService = (filePath, onData, onError) => {
 
       live.on(LiveTranscriptionEvents.Close, () => {
         // console.log("🔴 Connection closed.");
-        
+
         // Delete the file after successful transcription
         fs.unlink(filePath, (err) => {
           if (err) {
@@ -71,7 +73,6 @@ const callTranscriptionService = (filePath, onData, onError) => {
         // console.log("⌛ Timeout reached. Closing connection...");
         live.requestClose();
       }, 5000);
-      
     } catch (error) {
       console.error("❌ Failed to stream transcription:", error);
       onError(error);
@@ -81,4 +82,64 @@ const callTranscriptionService = (filePath, onData, onError) => {
 };
 
 
-module.exports = callTranscriptionService;
+const OpenAI = require("openai");
+
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Ensure this is set in your .env file
+});
+
+/**
+ * Streams response from OpenAI GPT-4o
+ * @param {string} transcriptText - transcription of audio
+ * @param {string} task - user query/task
+ * @param {function} onData - Callback for streaming OpenAI response
+ * @param {function} onError - Callback for handling errors
+ */
+const callTranscriptAssistant = async (
+  transcriptText,
+  task,
+  onData,
+  onError
+) => {
+  try {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `
+        You are an AI assistant that helps users understand or analyze audio transcriptions. 
+        Always base your response entirely on the transcription provided by the user. 
+        If asked for summaries, insights, legal implications, or other tasks, make sure your answers are accurate, clear, and grounded in the transcript.
+        `,
+        },
+        {
+          role: "user",
+          content: `
+    You are given an audio transcription:
+    
+    \`\`\`
+    ${transcriptText}
+    \`\`\`
+    
+    Task:
+    ${task}
+    
+    Please use only the transcription to perform the task accurately and provide a clear, helpful response.`,
+        },
+      ],
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      if (chunk.choices && chunk.choices[0].delta?.content) {
+        onData(chunk.choices[0]?.delta?.content || "");
+      }
+    }
+  } catch (error) {
+    if (onError) onError(error.message);
+  }
+};
+
+module.exports = { callTranscriptionService, callTranscriptAssistant};

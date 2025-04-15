@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const callTranscriptionService = require("../services/transcriptionService");
+const { callTranscriptionService, callTranscriptAssistant} = require("../services/transcriptionService");
 
 /**
  * Transcribes the provided audio file using the Stack AI transcription service after converting it to base64.
@@ -65,7 +65,76 @@ async function transcribeAudio(req, res) {
   }
 }
 
+async function performTranscriptTask(req, res) {
+  try {
+    const { transcriptText, task } = req.body;
+    // const userId = req.user?.id;
+
+    if (!transcriptText || !task) {
+      return res.status(400).json({ error: "Incomplete request parameters." });
+    }
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    let streamClosed = false;
+
+    
+    await callTranscriptAssistant(
+      transcriptText,
+      task,
+      (data) => {
+        if (streamClosed) return;
+        if (data) {
+          res.write(
+            `data: ${JSON.stringify({
+              type: "SUCCESS",
+              message: data,
+            })}\n\n`
+          );
+        }
+      },
+      (error) => {
+        console.error("Transcript assistant Error:", error);
+        if (streamClosed) return;
+        res.write(
+          `event: error\ndata: ${JSON.stringify({
+            type: "ERROR",
+            message: error,
+          })}\n\n`
+        );
+        res.end();
+        streamClosed = true;
+      }
+    );
+
+    if (!streamClosed) {
+      setTimeout(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "END",
+            message: "Streaming complete",
+          })}\n\n`
+        );
+        res.end();
+      }, 1000);
+    }
+  } catch (error) {
+    console.error("Streaming Error:", error);
+    res.write(
+      `event: error\ndata: ${JSON.stringify({
+        type: "SERVER_ERROR",
+        message: error.message,
+      })}\n\n`
+    );
+    res.end();
+  }
+};
+
 
 module.exports = {
   transcribeAudio,
+  performTranscriptTask
 };
