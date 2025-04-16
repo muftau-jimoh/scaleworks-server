@@ -1,6 +1,7 @@
 const { getEmbeddingFromOpenAI } = require("./getEmbedding");
 require("dotenv").config();
 const { Pinecone } = require("@pinecone-database/pinecone");
+const { v4: uuidv4 } = require("uuid");
 
 const pineconeApiKey = process.env.PINECONE_API_KEY;
 const pineconeIndexNameTwo = process.env.PINECONE_INDEX_NAME_2;
@@ -27,7 +28,7 @@ async function storeChunksInPinecone(sessionId, chunks) {
           const embedding = await getEmbeddingFromOpenAI(chunk);
           if (!embedding) throw new Error("Embedding generation failed.");
   
-          const vectorId = `${sessionId}-chunk-${i}`;
+          const vectorId = `${sessionId}-chunk-${i}-${uuidv4().slice(0, 8)}`;
           return {
             id: vectorId,
             values: embedding,

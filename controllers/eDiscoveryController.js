@@ -13,14 +13,17 @@ exports.performEDiscovery = async (req, res) => {
   try {
     const { query } = req.body;
     files = req.files;
-    
 
     if (!query || !files || files.length === 0) {
       return res
         .status(400)
         .json({ error: "Query and at least one file are required" });
     }
-
+    
+    // ✅ Check if the number of files exceeds the limit (5)
+    if (files.length > 5) {
+      return res.status(400).json({ error: "You can only upload up to 5 files." });
+    }
 
     // ✅ Check if all files exist
     for (const file of files) {
@@ -30,11 +33,12 @@ exports.performEDiscovery = async (req, res) => {
       }
     }
 
-
     const sessionId = uuidv4();
 
     // Step 1: Extract text
     const extractionResults = await extractTextFromFiles(files);
+
+    
     const failedExtractions = extractionResults.filter((r) => r.status === "failed");
     const successfulTexts = extractionResults.filter((r) => r.status === "success").map((r) => r.text);
 

@@ -12,35 +12,36 @@ const index = pc.index(pineconeIndexNameTwo);
 /** 
  * Finds relevant chunks for the given question
  */
-async function searchPinecone(sessionId, query) {
-  const queryEmbedding = await getEmbeddingFromOpenAI(query);
+async function searchPinecone(sessionId, query, topK = 5) {
+  try {
+    const queryEmbedding = await getEmbeddingFromOpenAI(query);
 
-  const results = await index.query({
-    vector: queryEmbedding,
-    topK: 5, // Retrieve top 5 relevant chunks
-    includeMetadata: true,
-    filter: { session: sessionId }, // Only retrieve chunks from this session
-  });
+    const results = await index.query({
+      vector: queryEmbedding,
+      topK,
+      includeMetadata: true,
+      filter: { session: sessionId },
+    });
 
-  return results.matches.map((match) => match.metadata.text);
+    return results.matches.map((match) => match.metadata.text);
+  } catch (error) {
+    console.error("Error during Pinecone search:", error);
+    return [];
+  }
 }
+
 
 async function findRelevantChunks(sessionId, query, retries = 5, delay = 2000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
-      const results = await searchPinecone(sessionId, query); // Your function that queries Pinecone
-      
-      if (results.length > 0) {
-          return results; // Return relevant chunks if found
-      }
+    const results = await searchPinecone(sessionId, query);
 
-      // console.log(`🔄 Retry ${attempt}/${retries} - No relevant content found. Waiting...`);
-      await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retrying
+    if (results.length > 0) return results;
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
-  return []; // Return empty array if no results after retries
+  return [];
 }
-
-
 
 
 /**
