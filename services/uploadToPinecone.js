@@ -1,5 +1,6 @@
 const { Pinecone } = require("@pinecone-database/pinecone");
 const { getEmbeddingFromOpenAI } = require("../utils/getEmbedding");
+const supabase = require("../config/supabaseClient");
 
 require("dotenv").config();
 
@@ -11,11 +12,7 @@ const pc = new Pinecone({ apiKey: pineconeApiKey });
 const index = pc.index(pineconeIndexNameOne);
 
 
-
-
 async function uploadToPinecone(username, chunks) {
-
-
   try {
     console.log(`🔍 Processing ${chunks.length} chunks for user: ${username}`);
 
@@ -23,7 +20,7 @@ async function uploadToPinecone(username, chunks) {
     const validChunks = chunks.filter((chunk) => chunk.trim());
     if (validChunks.length === 0) {
       console.warn("⚠️ No valid chunks to process.");
-      return;
+      return { success: false, message: "No valid chunks to process." };
     }
 
     const vectors = await Promise.all(
@@ -51,19 +48,74 @@ async function uploadToPinecone(username, chunks) {
     const validVectors = vectors.filter((v) => v !== null);
 
     if (validVectors.length > 0) {
-        await index.namespace(username).upsert(validVectors);
+      await index.namespace(username).upsert(validVectors);
       console.log(
         `✅ Uploaded ${validVectors.length} chunks successfully for ${username}`
       );
+
+      // ✅ Return the vector IDs
+      const vectorIds = validVectors.map((v) => v.id);
+      return {
+        success: true,
+        message: `Uploaded ${validVectors.length} vectors.`,
+        vectorIds,
+      };
     } else {
-      console.log("⚠️ No valid embeddings to upload.");
+      return {
+        success: false,
+        message: "No valid vectors to upload.",
+        vectorIds: [],
+      };
     }
-    return { success: "successful" };
   } catch (error) {
     return {
+      success: false,
       error: `Error uploading chunks: ${error.message}`,
+      vectorIds: [],
     };
   }
 }
 
-module.exports = uploadToPinecone;
+const deleteVectorsFromPinecone = async (username, vectorIds) => {
+  if (!Array.isArray(vectorIds) || vectorIds.length === 0) {
+    console.warn("⚠️ No vector IDs provided for deletion.");
+    return { success: false, message: "No vector IDs provided." };
+  }
+
+  try {
+    const response = await index.namespace(username).deleteMany(vectorIds);
+    console.log(`✅ Successfully deleted ${vectorIds.length} vectors from ${username}'s namespace.`);
+    return { success: true, response };
+  } catch (error) {
+    console.error("❌ Error deleting vectors from Pinecone:", error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+
+const removeKbIdFromUserProfile = async (userId, kbIdToRemove) => {
+  const { data: user, error: fetchError } = await supabase
+    .from("profiles")
+    .select("knowledgeBase")
+    .eq("id", userId)
+    .single();
+
+  if (fetchError) {
+    return { error: fetchError };
+  }
+
+  const currentKbIds = user?.knowledgeBase || [];
+  const updatedKbIds = currentKbIds.filter(id => id !== kbIdToRemove);
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({ knowledgeBase: updatedKbIds })
+    .eq("id", userId);
+
+  return { error: updateError || null };
+};
+
+
+
+
+module.exports = { uploadToPinecone, deleteVectorsFromPinecone, removeKbIdFromUserProfile};

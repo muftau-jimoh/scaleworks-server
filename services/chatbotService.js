@@ -1,9 +1,14 @@
 require("dotenv").config();
-const fetch = require("node-fetch");
 const { fetchRelevantContext } = require("../utils/chatBotModelFunctions");
 const OpenAI = require("openai");
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY
+});
+
 
 /**
  * Streams data from OpenAI
@@ -17,94 +22,42 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 async function askAI(relevantContext, query, onData, onError) {
   const context = relevantContext.join("\n\n");
 
-  return new Promise(async (resolve, reject) => {
-    // ✅ Ensure streaming completes before resolving
-    try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
+  try {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-            Accept: "text/event-stream",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content: `
-          You are a 24/7 AI assistant.
-          
-          Your primary role is to assist users by answering questions based on the provided company knowledge base ("Context"). Always prioritize this context if it is relevant to the user’s query.
-          
-          If the context is not related to the question, or not provided, then rely on your general knowledge to assist the user appropriately. 
-          
-          Be helpful, concise, and clear in your responses.
+          role: "system",
+          content: `
+    You are a 24/7 AI assistant.
+    
+    Your primary role is to assist users by answering questions based on the provided company knowledge base ("Context"). Always prioritize this context if it is relevant to the user’s query.
+    
+    If the context is not related to the question, or not provided, then rely on your general knowledge to assist the user appropriately. 
+    
+    Be helpful, concise, and clear in your responses.
 
-          If you're answering based on the context, make it clear that your answer is based on internal company information.
+    If you're answering based on the context, make it clear that your answer is based on internal company information.
 
-          If you're answering based on general knowledge, respond naturally but avoid referencing company-specific content.
-                `.trim(),
-              },
-              {
-                role: "user",
-                content: `Context:\n${context || "N/A"}\n\nUser Query: ${query}`,
-              },
-            ],
-            stream: true, // Enable streaming
-          }),
-        }
-      );
+    If you're answering based on general knowledge, respond naturally but avoid referencing company-specific content.
+          `.trim(),
+        },
+        {
+          role: "user",
+          content: `Context:\n${context || "N/A"}\n\nUser Query: ${query}`,
+        },
+      ],
+      stream: true,
+    });
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API Error: ${response.statusText}`);
+    for await (const chunk of stream) {
+      if (chunk.choices && chunk.choices[0].delta?.content) {
+        onData(chunk.choices[0]?.delta?.content || "");
       }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-
-        const lines = buffer.split("\n");
-        buffer = lines.pop(); // Keep the last incomplete line
-
-        for (let line of lines) {
-          if (line.trim() === "data: [DONE]") {
-            resolve(); // ✅ Ensure function resolves when streaming ends
-            return;
-          }
-
-          if (line.startsWith("data: ")) {
-            try {
-              const jsonString = line.replace("data: ", "").trim();
-              if (!jsonString) continue;
-
-              const parsedData = JSON.parse(jsonString);
-              if (parsedData.choices && parsedData.choices.length > 0) {
-                onData(parsedData.choices[0].delta.content || ""); // Stream text as it arrives
-              }
-            } catch (err) {
-              onError("Invalid JSON response from OpenAI");
-            }
-          }
-        }
-      }
-
-      resolve(); // ✅ Ensure Promise resolves on completion
-    } catch (error) {
-      onError(error.message);
-      reject(error); // ✅ Proper error handling
     }
-  });
+  } catch (error) {
+    if (onError) onError(error.message);
+  }
 }
 
 /**
@@ -140,56 +93,5 @@ async function queryChatBotService(organization_name, query, onData, onError) {
  * @param {function} onError - Callback for handling errors
  * @returns {Promise<void>} Resolves when streaming is fully complete
  */
-
-async function askAIFromGitHub(relevantContext, query, onData, onError) {
-  const context = relevantContext.join("\n\n");
-
-  const client = new OpenAI({
-    baseURL: "https://models.inference.ai.azure.com",
-    apiKey: process.env.GITHUB_TOKEN,
-  });
-
-  return new Promise(async (resolve, reject) => {
-    // ✅ Ensures streaming fully completes
-    try {
-      const stream = await client.chat.completions.create({
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an AI assistant that answers questions based on provided knowledge base context.",
-          },
-          {
-            role: "user",
-            content: `Context:\n${context}\n\nUser Query: ${query}`,
-          },
-        ],
-        model: "gpt-4o",
-        stream: true,
-        stream_options: { include_usage: true },
-      });
-
-      let usage = null;
-
-      for await (const part of stream) {
-        const text = part.choices[0]?.delta?.content || "";
-        if (text) onData(text); // ✅ Stream text as it arrives
-
-        if (part.usage) usage = part.usage;
-      }
-
-      if (usage) {
-        // console.log(`Prompt tokens: ${usage.prompt_tokens}`);
-        // console.log(`Completion tokens: ${usage.completion_tokens}`);
-        // console.log(`Total tokens: ${usage.total_tokens}`);
-      }
-
-      resolve(); // ✅ Ensures function completes successfully
-    } catch (error) {
-      onError(error.message);
-      reject(error); // ✅ Proper error handling
-    }
-  });
-}
 
 module.exports = queryChatBotService;

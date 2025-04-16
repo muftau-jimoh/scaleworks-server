@@ -14,7 +14,7 @@ exports.isAuthenticatedUser = async (req, res, next) => {
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
-      return res.status(401).json({ error: "Unauthorized: Invalid token" });
+      return res.status(401).json({ error: "Unauthorized: Please login" });
     }
 
     req.user = await getUserByAuthId(data?.user?.id);
@@ -26,6 +26,10 @@ exports.isAuthenticatedUser = async (req, res, next) => {
   }
 };
 
+
+const organizational_roles = [
+  "admin", "developer"
+]
 
 exports.isAuthenticatedAdmin = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -49,7 +53,7 @@ exports.isAuthenticatedAdmin = async (req, res, next) => {
       return res.status(401).json({ error: "Unauthorized: User not found" });
     }
 
-    if (user.user_name !== "admin") {
+    if (!organizational_roles.includes(user.user_name)) {
       return res.status(403).json({ error: "Forbidden: Admins only" });
     }
 

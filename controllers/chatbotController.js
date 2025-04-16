@@ -1,22 +1,21 @@
 const queryChatBotService = require("../services/chatbotService");
 const chunkText = require("../services/chunkText");
-const uploadToPinecone = require("../services/uploadToPinecone");
+const { uploadToPinecone, deleteVectorsFromPinecone, removeKbIdFromUserProfile} = require("../services/uploadToPinecone");
 const { extractTextFromFile } = require("../utils/extractTextFromFiles");
 const supabase = require("../config/supabaseClient");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 const fs = require("fs");
 const path = require("path");
-
+const { addDocumentToUserKnowledgeBase } = require("../services/knowledgeBaseService");
 
 async function chatWithBot(req, res) {
   const organization_name = req.user?.organization_name;
-  const { query } = req.body; // Get uploaded audio file
+  const { query } = req.query; // Get uploaded audio file
 
-  // Check if file is uploaded
   if (!query) {
     return res.status(400).json({ error: "A query is required." });
   }
-  
+
   if (!organization_name) {
     return res.status(400).json({ error: "Organization name is required." });
   }
@@ -56,7 +55,6 @@ async function chatWithBot(req, res) {
       }
     );
 
-    
     if (!streamClosed) {
       setTimeout(() => {
         res.write(
@@ -81,7 +79,7 @@ async function chatWithBot(req, res) {
 }
 
 
-async function uploadToKnowledgeBase(req, res) { 
+async function uploadToKnowledgeBase(req, res) {
   let files = [];
 
   try {
@@ -96,19 +94,16 @@ async function uploadToKnowledgeBase(req, res) {
       return res.status(400).json({ error: "Organization name is required." });
     }
 
-    // ✅ Check if all files exist
+    // ✅ Check all files exist
     for (const file of files) {
       const filePath = path.join(__dirname, "../uploads/file", file.filename);
       if (!fs.existsSync(filePath)) {
-        return res
-          .status(404)
-          .json({ error: `File not found: ${file.filename}` });
+        return res.status(404).json({ error: `File not found: ${file.filename}` });
       }
     }
 
-    let allChunks = [];
     let errors = [];
-    let uploadedFileNames = [];
+    let updatedUser = null;
 
     for (const file of files) {
       try {
@@ -118,70 +113,132 @@ async function uploadToKnowledgeBase(req, res) {
           continue;
         }
 
-        uploadedFileNames.push(file.originalname);
-
-        // Split text into chunks
         const chunks = chunkText(extractedText, 500);
-        allChunks.push(...chunks);
+
+        if (chunks.length === 0) {
+          errors.push(`No chunks extracted from ${file.originalname}`);
+          continue;
+        }
+
+        // Upload this file’s chunks to Pinecone
+        const uploadRes = await uploadToPinecone(organization_name, chunks);
+        if (!uploadRes?.success) {
+          errors.push(`Pinecone upload failed for ${file.originalname}`);
+          continue;
+        }
+
+        const vectorIds = uploadRes.vectorIds;
+
+        // Add to user’s knowledge base (reusable helper)
+        updatedUser = await addDocumentToUserKnowledgeBase(
+          userId,
+          file.originalname,
+          vectorIds,
+          supabase
+        );
       } catch (err) {
         console.error(`Error processing ${file.originalname}:`, err);
-        errors.push(`Error processing ${file.originalname}: ${err.message}`);
+        errors.push(`Error with ${file.originalname}: ${err.message}`);
       }
     }
 
-    // Upload to Pinecone if there are valid chunks
-    if (allChunks.length > 0) {
-      const uploadRes = await uploadToPinecone(organization_name, allChunks);
-      if (uploadRes?.error) {
-        console.error("❌ Pinecone Upload Error:", uploadRes?.error);
-        return res.status(500).json({
-          message: "Failed to upload data to Pinecone.",
-        });
-      }
-    }
-
-
-    // Update user's knowledgeBase in Supabase
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("knowledgeBase")
-      .eq("id", userId)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      // Ignore the error if the column is empty
-      console.error("❌ Supabase Fetch Error:", error);
-      return res.status(500).json({ error: "Failed to retrieve user data." });
-    }
-
-    const existingFiles = data?.knowledgeBase || [];
-
-    const updatedFiles = [...new Set([...existingFiles, ...uploadedFileNames])].map(file => String(file));
-
-    const { data: updatedUser, error: updateError } = await supabase
-      .from("profiles")
-      .update({ knowledgeBase: updatedFiles })
-      .eq("id", userId)
-      .select("*") // Fetch the updated user data
-
-
-    if (updateError) {
-      console.error("❌ Supabase Update Error:", updateError);
-      return res.status(500).json({ error: "Failed to update user data." });
+    if (!updatedUser) {
+      return res.status(500).json({
+        error: "Failed to process any files",
+        errors,
+      });
     }
 
     return res.status(200).json({
-      updatedUser: updatedUser,
+      updatedUser,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
     console.error("Upload Error:", error);
-    res.status(500).json({ error: "Internal Server Error." });
+    res.status(500).json({ error: error.message || "Internal Server Error." });
   } finally {
-    // Ensure all uploaded files are deleted
-    deleteFilesSafely(files)
+    deleteFilesSafely(files);
   }
 }
 
 
-module.exports = { chatWithBot, uploadToKnowledgeBase };
+async function fetchKnowledgeBase(req, res) {
+  try {
+    const { knowledgeBaseIds } = req.body;
+
+    if (!Array.isArray(knowledgeBaseIds) || knowledgeBaseIds.length === 0) {
+      return res.status(400).json({ error: "knowledgeBaseIds must be a non-empty array." });
+    }
+
+    const { data, error } = await supabase
+      .from("knowledgeBase")
+      .select("*")
+      .in("id", knowledgeBaseIds);
+
+    if (error) {
+      console.error("❌ Supabase Fetch Error:", error);
+      return res.status(500).json({ error: "Failed to fetch knowledge base records." });
+    }
+
+    return res.status(200).json({ knowledgeBases: data });
+  } catch (error) {
+    console.error("❌ Controller Error:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+}
+
+
+async function deleteKnowledgeBase(req, res) {
+  try {
+    const { user } = req;
+    const { organization_name } = user;
+    const { knowledgeBaseId } = req.body;
+
+    if (!knowledgeBaseId) {
+      return res.status(400).json({ error: "knowledgeBaseId is required" });
+    }
+
+    // Step 1: Fetch KB record
+    const { data: kbRecord, error: fetchError } = await supabase
+      .from("knowledgeBase")
+      .select("id, file_name, vector_ids")
+      .eq("id", knowledgeBaseId)
+      .single();
+
+    if (fetchError || !kbRecord) {
+      return res.status(404).json({ error: "Knowledge base not found" });
+    }
+
+    const vectorIds = kbRecord.vector_ids;
+
+    // Step 2: Delete vectors from Pinecone
+    const deleteVectorsRes = await deleteVectorsFromPinecone(organization_name, vectorIds);
+    if (!deleteVectorsRes?.success) {
+      return res.status(500).json({ error: "Failed to delete vectors from Pinecone" });
+    }
+
+    // Step 3: Remove KB ID from user's profile
+    const { error: updateProfileError } = await removeKbIdFromUserProfile(user.id, knowledgeBaseId);
+    if (updateProfileError) {
+      return res.status(500).json({ error: updateProfileError.message });
+    }
+
+    // Step 4: Delete the knowledgeBase record
+    const { error: deleteKbError } = await supabase
+      .from("knowledgeBase")
+      .delete()
+      .eq("id", knowledgeBaseId);
+
+    if (deleteKbError) {
+      return res.status(500).json({ error: "Failed to delete knowledge base record" });
+    }
+
+    return res.status(200).json({ message: "Knowledge base deleted successfully" });
+  } catch (err) {
+    console.error("Delete Error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+module.exports = { chatWithBot, uploadToKnowledgeBase, fetchKnowledgeBase, deleteKnowledgeBase };
