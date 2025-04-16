@@ -4,14 +4,18 @@ require("dotenv").config();
 
 const { getUserByAuthId, validateForm } = require("../utils/getUserByAuthId");
 
+const exempted_role = [
+    "admin",
+    "developer"
+]
 
 // User Signup
 exports.signup = async (req, res) => {
     const { organization_name, email, user_name, password } = req.body;
 
     // Ensure the user_name is not "admin"
-    if (user_name.toLowerCase() === "admin") {
-        return res.status(400).json({ error: "Username 'admin' is not allowed." });
+    if (exempted_role.includes(user_name.toLowerCase())) {
+        return res.status(400).json({ error: `Username ${user_name} is not allowed.` });
     }
 
     const validationError = validateForm({ organization_name, email, user_name, password });
