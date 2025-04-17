@@ -6,6 +6,7 @@ const {
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 const fs = require("fs");
 const path = require("path");
+const supabase = require("../config/supabaseClient");
 
 exports.reviewContract = async (req, res) => {
   let files = []; // Declare outside try block
@@ -14,6 +15,12 @@ exports.reviewContract = async (req, res) => {
     files = req.files; // Assign inside try
     if (!files || files?.length === 0) {
       return res.status(400).json({ error: "At least one file is required" });
+    }
+
+    
+    // ✅ Check if the number of files exceeds the limit (3)
+    if (files.length > 3) {
+      return res.status(400).json({ error: "You can only upload up to 3 files." });
     }
 
     // ✅ Check if all files exist

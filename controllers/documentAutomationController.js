@@ -6,6 +6,7 @@ const {
   generateExcel,
 } = require("../services/documentService"); // Function to fill the template
 const { uploadToCloudinary } = require("../utils/fileUpload");
+const supabase = require("../config/supabaseClient");
 
 exports.automateDocument = async (req, res) => {
   let file;

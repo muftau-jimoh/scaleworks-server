@@ -6,6 +6,7 @@ const storeChunksInPinecone = require("../utils/storeChunksInPinecone");
 const { deleteFilesSafely } = require("../utils/deleteFilesSafely");
 const fs = require("fs");
 const path = require("path");
+const supabase = require("../config/supabaseClient");
 
 exports.performEDiscovery = async (req, res) => {
   let files = [];

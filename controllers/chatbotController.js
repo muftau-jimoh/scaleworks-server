@@ -34,7 +34,6 @@ async function chatWithBot(req, res) {
       query,
       (data) => {
         if (!streamClosed && data) {
-          console.log("data: ", data);
           res.write(
             `data: ${JSON.stringify({ type: "SUCCESS", message: data })}\n\n`
           );

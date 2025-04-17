@@ -4,6 +4,7 @@ const {
   callTranscriptionService,
   callTranscriptAssistant,
 } = require("../services/transcriptionService");
+const supabase = require("../config/supabaseClient");
 
 /**
  * Transcribes the provided audio file using the Stack AI transcription service after converting it to base64.
