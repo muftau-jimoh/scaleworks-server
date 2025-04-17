@@ -26,7 +26,7 @@ dotenv.config(); // Load environment variables
 // Middleware
 app.use(
     cors({
-      origin: ["http://localhost:3000", "https://scalesworks.vercel.app", "https://scaleworks.ai"], // Restrict to known origins
+      origin: ["http://localhost:3000", "https://scalesworks.vercel.app", "https://scaleworks.ai", "https://dashboard.scaleworks.ai"], // Restrict to known origins
       credentials: true, // Allow cookies & authentication
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: [
