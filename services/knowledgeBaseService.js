@@ -3,7 +3,7 @@ async function addDocumentToUserKnowledgeBase(userId, fileName, vectorIds, supab
     // Insert document metadata
     const { data: kbRecord, error: kbInsertError } = await supabase
       .from("knowledgeBase")
-      .insert({ file_name: fileName, vector_ids: vectorIds })
+      .insert({ file_name: fileName, vector_ids: vectorIds, userId })
       .select("id")
       .single();
   
